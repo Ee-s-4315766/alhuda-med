@@ -129,17 +129,22 @@ def main():
         if user["role"] == "admin":
             pages = {
                 "📊 لوحة الإدارة":          "admin",
+                "📅 التقرير الشهري":        "monthly",
                 "📦 معالجة جماعية":         "bulk",
                 "🔍 محرك تحليل اليوكاف":    "ucaaf",
                 "🗂️ كتالوج الأكواد":        "catalog",
+                "🏥 شركات التأمين":         "insurance",
                 "✅ قائمة التحقق":          "checklist",
+                "⚙️ الإعدادات":             "settings",
             }
         else:
             pages = {
                 "📋 لوحتي الشخصية":         "doctor",
+                "📅 تقريري الشهري":         "monthly",
                 "📦 معالجة جماعية":         "bulk",
                 "🔍 محرك تحليل اليوكاف":    "ucaaf",
                 "🗂️ كتالوج الأكواد":        "catalog",
+                "🏥 شركات التأمين":         "insurance",
                 "✅ قائمة التحقق":          "checklist",
             }
 
@@ -162,11 +167,20 @@ def main():
     elif selected == "ucaaf":
         from app.pages.ucaaf_upload import render
         render(df, user)
+    elif selected == "monthly":
+        from app.pages.monthly_report import render
+        render(df, user)
     elif selected == "catalog":
         from app.pages.code_catalog import render
         render(df, user)
+    elif selected == "insurance":
+        from app.pages.insurance_page import render
+        render(df, user)
     elif selected == "checklist":
         from app.pages.checklist import render
+        render(df, user)
+    elif selected == "settings":
+        from app.pages.settings import render
         render(df, user)
 
 
