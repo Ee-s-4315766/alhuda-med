@@ -130,12 +130,14 @@ def main():
             pages = {
                 "📊 لوحة الإدارة":          "admin",
                 "🔍 محرك تحليل اليوكاف":    "ucaaf",
+                "🗂️ كتالوج الأكواد":        "catalog",
                 "✅ قائمة التحقق":          "checklist",
             }
         else:
             pages = {
                 "📋 لوحتي الشخصية":         "doctor",
                 "🔍 محرك تحليل اليوكاف":    "ucaaf",
+                "🗂️ كتالوج الأكواد":        "catalog",
                 "✅ قائمة التحقق":          "checklist",
             }
 
@@ -154,6 +156,9 @@ def main():
         render(df, user)
     elif selected == "ucaaf":
         from app.pages.ucaaf_upload import render
+        render(df, user)
+    elif selected == "catalog":
+        from app.pages.code_catalog import render
         render(df, user)
     elif selected == "checklist":
         from app.pages.checklist import render

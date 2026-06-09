@@ -99,6 +99,14 @@ UCAF_PATIENT_RULES = {
 
 FINANCIAL_LIMIT = 5000  # SAR — prior auth required above this
 
+# ── Import comprehensive ICD/CPT database ────────────────────────────────────
+try:
+    from app.icd_cpt_db import ICD_DATABASE, CPT_COMMON_MISTAKES
+    _DB_LOADED = True
+except ImportError:
+    _DB_LOADED = False
+    ICD_DATABASE = {}
+    CPT_COMMON_MISTAKES = {}
 
 # ─────────────────────────────────────────────────────────────────────────────
 @dataclass
@@ -136,14 +144,47 @@ def analyze(row: dict) -> ClaimCheck:
     chief_complaint  = str(row.get("chief_complaint", "")).lower()
     age           = int(row.get("age", 0))
 
-    # ── Rule 1 — ICD / CPT mismatch ──────────────────────────────────────────
-    if icd in ICD_CPT_VALID and cpt and cpt not in ICD_CPT_VALID[icd]:
+    # ── Rule 1 — ICD / CPT mismatch (static table + DB) ─────────────────────
+    db_info = ICD_DATABASE.get(icd) if _DB_LOADED else None
+    valid_from_db = db_info["valid_cpt"] if db_info else []
+    valid_combined = list(set(ICD_CPT_VALID.get(icd, []) + valid_from_db))
+
+    if cpt and valid_combined and cpt not in valid_combined:
+        forbidden_note = ""
+        if db_info and cpt in db_info.get("forbidden_cpt", []):
+            forbidden_note = " — هذا الكود من أكثر الأكواد الخاطئة شيوعاً مع هذا التشخيص"
+        elif cpt in CPT_COMMON_MISTAKES:
+            m = CPT_COMMON_MISTAKES[cpt]
+            forbidden_note = f" — {m['description']}"
         result.errors.append({
             "code":  "ERR-01",
             "level": "عالي",
-            "msg":   f"عدم تطابق التشخيص ({icd}) مع الإجراء ({cpt})",
-            "fix":   f"تأكد أن كود CPT {cpt} متوافق مع {icd} أو غيّر التشخيص",
+            "msg":   f"عدم تطابق التشخيص ({icd}) مع الإجراء ({cpt}){forbidden_note}",
+            "fix":   f"الأكواد المقبولة مع {icd}: {', '.join(valid_combined[:5])}",
         })
+    elif cpt and not valid_combined and icd in ICD_DATABASE:
+        # ICD exists in DB but has no valid CPT (symptom code used as primary)
+        pass  # caught by Rule 2 below
+
+    # ── Rule 1B — Unspecified ICD code (prefer more specific) ────────────────
+    if _DB_LOADED and db_info and db_info.get("specificity") == "unspecified":
+        prefer = db_info.get("prefer_code","")
+        result.errors.append({
+            "code":  "ERR-20",
+            "level": "متوسط",
+            "msg":   f"كود ICD غير محدد ({icd} — {db_info['name_ar']}) — شركات التأمين تفضل الكود الأدق",
+            "fix":   f"استبدله بكود أكثر تحديداً: {prefer}" if prefer else "استخدم كوداً أكثر تحديداً",
+        })
+
+    # ── Rule 1C — Required checkboxes from ICD profile ───────────────────────
+    if _DB_LOADED and db_info:
+        for cb in db_info.get("requires_cb", []):
+            if cb == "infertility" and not cb_infertility:
+                pass  # handled by ERR-13
+            if cb == "pregnancy" and not cb_pregnancy:
+                pass  # handled by ERR-15
+            if cb == "chronic":
+                pass  # future: add chronic checkbox field
 
     # ── Rule 2 — Symptom code used as primary diagnosis ──────────────────────
     primary_prefix = icd.split(".")[0] if icd else ""
