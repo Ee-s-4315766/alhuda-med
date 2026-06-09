@@ -69,6 +69,34 @@ SYSTEMIC_STEROID_ASTHMA_CODES = {"J45.4", "J45.5", "J45.41", "J45.51"}
 # ── Source codes that require GP referral code ────────────────────────────────
 REQUIRES_REFERRAL_SRC = {"MG1002", "MG1003"}
 
+# ── Infertility ICD codes that require the "infertility" checkbox ─────────────
+INFERTILITY_ICD_CODES = {
+    "N97.0",  # Female infertility — anovulation
+    "N97.1",  # Female infertility — tubal origin
+    "N97.2",  # Female infertility — uterine origin
+    "N97.8",  # Female infertility — other specified
+    "N97.9",  # Female infertility — unspecified
+    "N46",    # Male infertility
+    "N46.0",  # Azoospermia
+    "N46.1",  # Oligospermia
+    "Z31.0",  # Tuboplasty / sterilization reversal
+    "Z31.4",  # Procreative investigation
+}
+
+# ── Fertility-related lab/service keywords ────────────────────────────────────
+FERTILITY_LAB_KEYWORDS = [
+    "fsh", "lh", "prolactin", "amh", "estradiol", "testosterone",
+    "progesterone", "semen analysis", "hysteroscopy", "hsg",
+    "follicle", "ovulation", "ivf", "iui",
+]
+
+# ── UCAF type rules ────────────────────────────────────────────────────────────
+# UCAF-2 is for inpatient; UCAF-1 for outpatient
+UCAF_PATIENT_RULES = {
+    "UCAF-2": "inpatient",
+    "UCAF-1": "outpatient",
+}
+
 FINANCIAL_LIMIT = 5000  # SAR — prior auth required above this
 
 
@@ -94,13 +122,19 @@ def analyze(row: dict) -> ClaimCheck:
     """Run all UCAAF rules against a single claim dict."""
     result = ClaimCheck(claim_id=row.get("claim_id", "?"))
 
-    icd      = str(row.get("icd_code", "")).strip()
-    icd2     = str(row.get("icd_code_2", "")).strip()   # second ICD code
-    cpt      = str(row.get("cpt_code", "")).strip()
-    amount   = float(row.get("amount", 0))
-    approval = str(row.get("approval_no", "")).strip()
-    drugs    = str(row.get("drugs", "")).lower()         # pipe-separated drug names
-    src_code = str(row.get("source_code", "")).strip().upper()
+    icd           = str(row.get("icd_code", "")).strip()
+    icd2          = str(row.get("icd_code_2", "")).strip()
+    cpt           = str(row.get("cpt_code", "")).strip()
+    amount        = float(row.get("amount", 0))
+    approval      = str(row.get("approval_no", "")).strip()
+    drugs         = str(row.get("drugs", "")).lower()
+    src_code      = str(row.get("source_code", "")).strip().upper()
+    ucaf_type     = str(row.get("ucaf_type", "")).strip().upper()      # "UCAF-1" or "UCAF-2"
+    patient_type  = str(row.get("patient_type", "")).strip().lower()   # "outpatient" / "inpatient"
+    cb_infertility   = bool(row.get("cb_infertility", False))          # checkbox
+    cb_pregnancy     = bool(row.get("cb_pregnancy", False))            # pregnancy/indicate checkbox
+    chief_complaint  = str(row.get("chief_complaint", "")).lower()
+    age           = int(row.get("age", 0))
 
     # ── Rule 1 — ICD / CPT mismatch ──────────────────────────────────────────
     if icd in ICD_CPT_VALID and cpt and cpt not in ICD_CPT_VALID[icd]:
@@ -242,7 +276,59 @@ def analyze(row: dict) -> ClaimCheck:
                 "fix":   f"وحّد الكود إلى {asthma_code} في جميع سطور الوصفة",
             })
 
-    # ── Rule 13 — H. pylori drug without H. pylori ICD (extended check) ──────
+    # ── Rule 13 — Infertility diagnosis without "infertility" checkbox ───────
+    is_infertility_icd = icd in INFERTILITY_ICD_CODES or any(
+        icd.startswith(c) for c in ["N97", "N46", "Z31"]
+    )
+    if is_infertility_icd and not cb_infertility:
+        result.errors.append({
+            "code":  "ERR-13",
+            "level": "عالي",
+            "msg":   f"تشخيص العقم ({icd}) بدون تفعيل مربع «infertility» في النموذج",
+            "fix":   "فعّل مربع الاختيار «infertility» في صفحة اليوكاف — هذا شرط إلزامي لشركات التأمين",
+        })
+
+    # ── Rule 14 — Fertility labs without infertility checkbox ────────────────
+    has_fertility_lab = any(k in drugs for k in FERTILITY_LAB_KEYWORDS)
+    if has_fertility_lab and not cb_infertility:
+        result.errors.append({
+            "code":  "ERR-14",
+            "level": "عالي",
+            "msg":   "تحاليل خصوبة (FSH/Prolactin/LH/AMH) بدون تفعيل مربع «infertility»",
+            "fix":   "فعّل مربع «infertility» وتأكد من وجود تشخيص N97.x أو N46.x",
+        })
+
+    # ── Rule 15 — "pregnancy/indicate" missing for conception cases ──────────
+    wants_conception = any(k in chief_complaint for k in [
+        "conceive", "pregnancy", "ivf", "iui", "infertil", "nullipara",
+    ])
+    if wants_conception and not cb_pregnancy:
+        result.errors.append({
+            "code":  "ERR-15",
+            "level": "متوسط",
+            "msg":   "الشكوى تذكر الرغبة في الحمل لكن مربع «pregnancy/indicate» غير مُفعَّل",
+            "fix":   "فعّل مربع «pregnancy/indicate» لتبرير تحاليل الخصوبة",
+        })
+
+    # ── Rule 16 — UCAF-2 used for outpatient visit ───────────────────────────
+    if ucaf_type == "UCAF-2" and patient_type == "outpatient":
+        result.errors.append({
+            "code":  "ERR-16",
+            "level": "عالي",
+            "msg":   "نموذج UCAF-2 مستخدم مع حالة خارجية (Outpatient) — UCAF-2 مخصص للمنوم",
+            "fix":   "استخدم UCAF-1 للحالات الخارجية أو تأكد من صحة نوع المريض",
+        })
+
+    # ── Rule 17 — Advanced maternal age infertility note ─────────────────────
+    if is_infertility_icd and age >= 40:
+        result.errors.append({
+            "code":  "ERR-17",
+            "level": "متوسط",
+            "msg":   f"المريضة عمرها {age} سنة — بعض شركات التأمين تشترط موافقة مسبقة لعلاج العقم فوق 40 سنة",
+            "fix":   "تأكد من وجود رقم موافقة مسبقة (Prior Auth) خاص بحالات العقم لهذا العمر",
+        })
+
+    # ── Rule 19 — H. pylori drug without H. pylori ICD (extended check) ──────
     # Already ERR-07 handles primary ICD; this catches when K29.7 is 2nd code
     pylori_drugs_list = ["riack", "clarithromycin"]
     has_pylori_drug   = any(d in drugs for d in pylori_drugs_list)
@@ -297,9 +383,27 @@ if __name__ == "__main__":
             "drugs": "pulmicort|dexamethasone|respred|riack plus|gp general practitioner",
             "drug_icd": "J45.5",
         },
-        # Case 3 — Clean reference
+        # Case 3 — Infertility screenshot (N97.0, FSH+Prolactin, infertility CB missing)
         {
-            "claim_id": "CASE3-CLEAN",
+            "claim_id":       "CASE3-INFERTILITY",
+            "patient_id":     "P3918",
+            "icd_code":       "N97.0",
+            "icd_code_2":     "",
+            "cpt_code":       "99213",
+            "amount":         450,
+            "approval_no":    "2026/2398109",
+            "service_date":   "2026-03-08",
+            "patient_signed": True,
+            "drugs":          "specialist|prolactin h|fsh",
+            "ucaf_type":      "UCAF-2",
+            "patient_type":   "outpatient",
+            "cb_infertility": False,
+            "cb_pregnancy":   False,
+            "chief_complaint":"nullipara old age 41y irregular cycle wants to conceive",
+            "age":            41,
+        },
+        {
+            "claim_id": "CASE4-CLEAN",
             "patient_id": "P999",
             "icd_code": "K29.70",
             "icd_code_2": "R11",

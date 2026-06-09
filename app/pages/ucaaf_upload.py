@@ -60,33 +60,46 @@ def render(_df, user):
             with c1:
                 claim_id    = st.text_input("رقم المطالبة", "CLM-XXXX")
                 patient_id  = st.text_input("الرقم الطبي للمريض")
+                patient_age = st.number_input("عمر المريض (سنة)", min_value=0, max_value=120, value=30)
                 icd_primary = st.text_input("كود التشخيص الرئيسي (ICD-10)", "K29.70",
-                                            help="مثال: K29.70 | J18.9 | E11.9")
+                                            help="مثال: K29.70 | N97.0 | J45.9")
                 icd_second  = st.text_input("كود التشخيص الثانوي (اختياري)", "R11")
                 service_dt  = st.date_input("تاريخ الخدمة")
+                ucaf_type   = st.selectbox("نوع اليوكاف", ["UCAF-1", "UCAF-2", "UCAF-3"])
+                patient_type_sel = st.selectbox("نوع المريض", ["outpatient", "inpatient"])
             with c2:
                 cpt         = st.text_input("كود الإجراء CPT", "99213")
                 amount      = st.number_input("المبلغ (ر.س)", min_value=0.0, value=357.0, step=50.0)
                 approval    = st.text_input("رقم الموافقة المسبقة (إن وجد)")
-                signed      = st.checkbox("المريض وقّع نموذج الموافقة", value=True)
+                chief_c     = st.text_input("الشكوى الرئيسية (Chief Complaint)",
+                                            help="مثال: headache | wants to conceive | difficult breathing")
                 drugs_raw   = st.text_area("الأدوية والخدمات (افصل بـ |)",
                                            "riack plus|daroxime|paracetamol|pantozol|dansetron",
-                                           height=90)
+                                           height=70)
+                signed      = st.checkbox("المريض وقّع نموذج الموافقة", value=True)
+                cb_infert   = st.checkbox("مربع «infertility» مُفعَّل في النموذج", value=False)
+                cb_preg     = st.checkbox("مربع «pregnancy/indicate» مُفعَّل", value=False)
 
             submitted = st.form_submit_button("⚡ فحص الآن", use_container_width=True)
 
         if submitted:
             row = {
-                "claim_id":     claim_id,
-                "patient_id":   patient_id,
-                "icd_code":     icd_primary.strip(),
-                "icd_code_2":   icd_second.strip(),
-                "cpt_code":     cpt.strip(),
-                "amount":       amount,
-                "approval_no":  approval.strip(),
-                "service_date": str(service_dt),
+                "claim_id":       claim_id,
+                "patient_id":     patient_id,
+                "age":            patient_age,
+                "icd_code":       icd_primary.strip(),
+                "icd_code_2":     icd_second.strip(),
+                "cpt_code":       cpt.strip(),
+                "amount":         amount,
+                "approval_no":    approval.strip(),
+                "service_date":   str(service_dt),
                 "patient_signed": signed,
-                "drugs":        drugs_raw.lower(),
+                "drugs":          drugs_raw.lower(),
+                "ucaf_type":      ucaf_type,
+                "patient_type":   patient_type_sel,
+                "cb_infertility": cb_infert,
+                "cb_pregnancy":   cb_preg,
+                "chief_complaint":chief_c.lower(),
             }
             result = analyze(row)
 
@@ -226,6 +239,18 @@ def render(_df, user):
             {"ICD-10": "B96.81", "الوصف": "H. pylori كعامل مُسبِّب",
              "أكواد CPT المقبولة": "—",
              "ملاحظة": "✅ يُضاف كـ 2nd code لتبرير العلاج الثلاثي"},
+            {"ICD-10": "N97.0",  "الوصف": "عقم أنثوي — عدم إباضة",
+             "أكواد CPT المقبولة": "99213, 99214",
+             "ملاحظة": "🚫 يُرفض بدون تفعيل مربع «infertility» + «pregnancy/indicate»"},
+            {"ICD-10": "N97.1",  "الوصف": "عقم أنثوي — منشأ قناة فالوب",
+             "أكواد CPT المقبولة": "99213, 99214",
+             "ملاحظة": "🚫 نفس الشروط — مربعا infertility و pregnancy إلزاميان"},
+            {"ICD-10": "N46.1",  "الوصف": "عقم ذكوري — قِلَّة الحيوانات المنوية",
+             "أكواد CPT المقبولة": "99213, 99214",
+             "ملاحظة": "🚫 يُرفض بدون مربع «infertility»"},
+            {"ICD-10": "Z31.4",  "الوصف": "فحوصات الخصوبة والإنجاب",
+             "أكواد CPT المقبولة": "99213, 99214",
+             "ملاحظة": "⚠️ بعض التأمينات لا تُغطي حالات العقم فوق عمر 40"},
         ]
         st.dataframe(pd.DataFrame(ref), use_container_width=True, hide_index=True)
 
@@ -243,6 +268,14 @@ def render(_df, user):
              "احتفظ بنوع واحد أو اثنين بمبرر سريري موثّق"),
             ("ERR-12", "متوسط", "كود الدواء في السطر يختلف عن التشخيص الرئيسي (J45.5 vs J45.9)",
              "وحّد كود ICD في جميع سطور الوصفة"),
+            ("ERR-13", "عالي",  "تشخيص N97.0 (عقم) بدون تفعيل مربع «infertility»",
+             "فعّل المربع قبل الإرسال — هذا أكثر أسباب رفض حالات العقم شيوعاً"),
+            ("ERR-14", "عالي",  "تحاليل FSH/Prolactin/AMH بدون مربع infertility",
+             "فعّل المربع + تأكد من وجود N97.x في التشخيص"),
+            ("ERR-16", "عالي",  "UCAF-2 مع حالة خارجية (Outpatient)",
+             "استخدم UCAF-1 للحالات الخارجية"),
+            ("ERR-17", "متوسط", "مريضة فوق 40 سنة مع تشخيص عقم",
+             "بعض التأمينات تشترط Prior Auth خاص — تأكد قبل الإرسال"),
             ("ERR-01", "عالي",  "عدم تطابق ICD مع CPT",
              "راجع جدول الأكواد في هذا التبويب"),
             ("ERR-02", "عالي",  "تجاوز الحد المالي (5000 ر.س) بدون موافقة مسبقة",
