@@ -128,13 +128,15 @@ def main():
 
         if user["role"] == "admin":
             pages = {
-                "📊 لوحة الإدارة":        "admin",
-                "🔍 محرك تحليل اليوكاف":  "ucaaf",
+                "📊 لوحة الإدارة":          "admin",
+                "🔍 محرك تحليل اليوكاف":    "ucaaf",
+                "✅ قائمة التحقق":          "checklist",
             }
         else:
             pages = {
-                "📋 لوحتي الشخصية":       "doctor",
-                "🔍 محرك تحليل اليوكاف":  "ucaaf",
+                "📋 لوحتي الشخصية":         "doctor",
+                "🔍 محرك تحليل اليوكاف":    "ucaaf",
+                "✅ قائمة التحقق":          "checklist",
             }
 
         page = st.radio("القائمة", list(pages.keys()), label_visibility="collapsed")
@@ -152,6 +154,9 @@ def main():
         render(df, user)
     elif selected == "ucaaf":
         from app.pages.ucaaf_upload import render
+        render(df, user)
+    elif selected == "checklist":
+        from app.pages.checklist import render
         render(df, user)
 
 
