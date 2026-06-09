@@ -1,6 +1,8 @@
 """UCAAF Error Analyzer — rule-based engine.
 
-Rules extracted from real clinic cases (including H. pylori / Gastritis scenario).
+Rules extracted from real clinic cases:
+  Case 1 — Gastritis / H. pylori (K29.7, R11, Riack Plus, Daroxime)
+  Case 2 — Asthma + Gastritis (J45.9, K29.7, triple corticosteroid, Riack Plus)
 """
 from dataclasses import dataclass, field
 from typing import List
@@ -18,6 +20,9 @@ ICD_CPT_VALID = {
     "K29.0":  ["99213","99214","43239"],
     "R11":    ["99213","99214"],
     "R10.9":  ["99213","99214"],
+    "J45.9":  ["99213","99214","94640","94664"],
+    "J45.5":  ["99213","99214","94640","94664"],
+    "J45.4":  ["99213","99214","94640"],
 }
 
 # ── Symptom codes that must NOT appear as primary diagnosis ───────────────────
@@ -29,22 +34,37 @@ SYMPTOM_CODES = {
     "R50.9", # Fever, unspecified
     "R05",   # Cough
     "R06.0", # Dyspnoea
+    "R06.2", # Wheezing
     "R07.9", # Chest pain
     "R55",   # Syncope
     "R41.3", # Other amnesia
     "R00.0", # Tachycardia
+    "R06.09",# Other forms of dyspnoea
 }
 
 # ── Drugs that require a specific ICD justification ──────────────────────────
-# drug_keyword (lowercase) → list of acceptable primary ICD prefixes
 DRUG_ICD_REQUIRED = {
     "cefuroxime":    ["J","K29.70","A","B96","L","N"],
     "daroxime":      ["J","K29.70","A","B96","L","N"],
     "amoxicillin":   ["J","K29.70","A","B96","L","N","H"],
     "clarithromycin":["J","K29.70","A","B96","L","K29.0"],
-    "riack":         ["K29.70","K29.0","B96"],   # H.pylori triple therapy
+    "riack":         ["K29.70","K29.0","B96"],
     "metronidazole": ["K29.70","K29.0","B96","A06","N76"],
 }
+
+# ── Corticosteroid keywords (systemic vs inhaled) ─────────────────────────────
+SYSTEMIC_STEROIDS = [
+    "dexamethasone", "prednisolone", "respred", "prednisone",
+    "hydrocortisone", "methylprednisolone", "solumedrol",
+]
+INHALED_STEROIDS = [
+    "pulmicort", "budesonide", "fluticasone", "beclomethasone",
+    "symbicort", "seretide", "flixotide",
+]
+
+# ── Asthma ICD sub-code → allowed drug severity mapping ──────────────────────
+# Systemic corticosteroids (IV/IM/oral) are justified for J45.4 and J45.5 only
+SYSTEMIC_STEROID_ASTHMA_CODES = {"J45.4", "J45.5", "J45.41", "J45.51"}
 
 # ── Source codes that require GP referral code ────────────────────────────────
 REQUIRES_REFERRAL_SRC = {"MG1002", "MG1003"}
@@ -170,15 +190,73 @@ def analyze(row: dict) -> ClaimCheck:
             "fix":   "أدخل الرقم الطبي (MRN) للمريض",
         })
 
-    # ── Rule 9 — R11 paired with K29.7 order check ───────────────────────────
-    # If primary=K29.7 and second=R11 that's correct; reverse is wrong
-    if icd in SYMPTOM_CODES and icd2.startswith("K"):
+    # ── Rule 9 — ICD code order: symptom before cause ────────────────────────
+    if icd in SYMPTOM_CODES and icd2 and icd2 not in SYMPTOM_CODES:
         result.errors.append({
             "code":  "ERR-09",
             "level": "عالي",
             "msg":   f"ترتيب الأكواد مقلوب: العَرَض ({icd}) في الأول والتشخيص ({icd2}) في الثاني",
             "fix":   f"اجعل {icd2} هو الكود الأول و {icd} الكود الثاني",
         })
+
+    # ── Rule 10 — Systemic corticosteroid without severe asthma ICD ──────────
+    has_systemic = any(k in drugs for k in SYSTEMIC_STEROIDS)
+    has_inhaled  = any(k in drugs for k in INHALED_STEROIDS)
+    is_asthma    = icd.startswith("J45") or icd2.startswith("J45")
+    asthma_code  = icd if icd.startswith("J45") else icd2
+
+    if has_systemic and is_asthma and asthma_code not in SYSTEMIC_STEROID_ASTHMA_CODES:
+        result.errors.append({
+            "code":  "ERR-10",
+            "level": "عالي",
+            "msg":   f"كورتيزون جهازي (حقن/شراب) مع كود ربو ({asthma_code}) لا يبرره — يُقبل فقط مع J45.4 أو J45.5",
+            "fix":   f"غيّر الكود إلى J45.5 (Severe persistent) إذا كانت الحالة حادة، أو احذف الكورتيزون الجهازي",
+        })
+
+    # ── Rule 11 — Duplicate / triple corticosteroids ─────────────────────────
+    systemic_count = sum(1 for k in SYSTEMIC_STEROIDS if k in drugs)
+    if has_systemic and has_inhaled and systemic_count >= 1:
+        result.errors.append({
+            "code":  "ERR-11",
+            "level": "عالي",
+            "msg":   "مضاعفة الكورتيزون: كورتيزون استنشاقي + كورتيزون جهازي في وصفة واحدة",
+            "fix":   "راجع الطبيب — عادةً يُختار إما الاستنشاق أو الجهازي. اذكر المبرر السريري صراحةً في الملف",
+        })
+    if systemic_count >= 2:
+        result.errors.append({
+            "code":  "ERR-11B",
+            "level": "عالي",
+            "msg":   f"وصف {systemic_count} أنواع كورتيزون جهازي في نفس الوصفة (تكرار)",
+            "fix":   "احتفظ بنوع واحد فقط وأزل الباقي أو وثّق المبرر الطبي",
+        })
+
+    # ── Rule 12 — Asthma drug linked to wrong asthma sub-code ────────────────
+    # Dexamethasone / Pulmicort should match same J45.x variant
+    drug_icd_col = str(row.get("drug_icd", "")).strip()   # per-line drug ICD if available
+    if drug_icd_col and is_asthma and drug_icd_col != asthma_code:
+        if drug_icd_col.startswith("J45") and asthma_code.startswith("J45"):
+            result.errors.append({
+                "code":  "ERR-12",
+                "level": "متوسط",
+                "msg":   f"كود التشخيص المربوط بالدواء ({drug_icd_col}) يختلف عن التشخيص الرئيسي ({asthma_code})",
+                "fix":   f"وحّد الكود إلى {asthma_code} في جميع سطور الوصفة",
+            })
+
+    # ── Rule 13 — H. pylori drug without H. pylori ICD (extended check) ──────
+    # Already ERR-07 handles primary ICD; this catches when K29.7 is 2nd code
+    pylori_drugs_list = ["riack", "clarithromycin"]
+    has_pylori_drug   = any(d in drugs for d in pylori_drugs_list)
+    all_icds          = " ".join([icd, icd2, str(row.get("icd_code_3",""))])
+    has_pylori_icd    = any(c in all_icds for c in ["K29.70","K29.0","B96"])
+    if has_pylori_drug and not has_pylori_icd:
+        # Only add if ERR-07 was not already added
+        if not any(e["code"] == "ERR-07" for e in result.errors):
+            result.errors.append({
+                "code":  "ERR-07",
+                "level": "عالي",
+                "msg":   "وصف دواء علاج H. pylori بدون كود K29.70 أو B96.81 في أي خانة",
+                "fix":   "أضف K29.70 في خانة التشخيص الثاني إذا كان التهاب المعدة بسبب H. pylori",
+            })
 
     return result
 
@@ -192,9 +270,9 @@ def analyze_dataframe(df):
 # Quick test
 if __name__ == "__main__":
     cases = [
-        # Gastritis case from screenshot — R11 as primary, H.pylori drug, antibiotic
+        # Case 1 — Gastritis screenshot (R11 as primary, H.pylori drug, antibiotic)
         {
-            "claim_id": "CLM-SCREENSHOT",
+            "claim_id": "CASE1-GASTRITIS",
             "patient_id": "P123456",
             "icd_code": "R11",
             "icd_code_2": "K29.7",
@@ -205,9 +283,23 @@ if __name__ == "__main__":
             "patient_signed": True,
             "drugs": "riack plus|daroxime|paracetamol|pantozol|dansetron|normal saline",
         },
-        # Clean claim
+        # Case 2 — Asthma + Gastritis screenshot (triple corticosteroid, J45.9 + K29.7)
         {
-            "claim_id": "CLM-CLEAN",
+            "claim_id": "CASE2-ASTHMA",
+            "patient_id": "P789012",
+            "icd_code": "J45.9",
+            "icd_code_2": "K29.7",
+            "cpt_code": "99213",
+            "amount": 200.9,
+            "approval_no": "",
+            "service_date": "2025-06-02",
+            "patient_signed": True,
+            "drugs": "pulmicort|dexamethasone|respred|riack plus|gp general practitioner",
+            "drug_icd": "J45.5",
+        },
+        # Case 3 — Clean reference
+        {
+            "claim_id": "CASE3-CLEAN",
             "patient_id": "P999",
             "icd_code": "K29.70",
             "icd_code_2": "R11",
