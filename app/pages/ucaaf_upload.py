@@ -1,296 +1,181 @@
-"""UCAAF Upload & Error Analyzer — live file checker."""
-import io
+"""UCAAF Entry Form & Error Analyzer — إدخال بيانات اليوكاف وفحص الأخطاء فوراً"""
+import json
 import streamlit as st
 import pandas as pd
-from app.ucaaf_analyzer import analyze_dataframe, analyze
-from app.components import alert_box, error_bar_chart, kpi_row
+from pathlib import Path
+from app.ucaaf_analyzer import analyze
+from app.components import alert_box
 
-REQUIRED_COLS = [
-    "claim_id", "patient_id", "doctor_id", "service_date",
-    "icd_code", "cpt_code", "amount", "approval_no",
-]
+DOCTORS_PATH = Path(__file__).parent.parent.parent / "data" / "doctors.json"
 
-SAMPLE_DATA = {
-    "claim_id":      ["CLM-9001", "CLM-9002", "CLM-9003", "CLM-9004"],
-    "patient_id":    ["P111111",  "",          "P333333",  "P444444"],
-    "doctor_id":     ["D001",     "D002",      "D003",     "D001"],
-    "service_date":  ["2025-06-01","2025-06-02","",        "2025-06-03"],
-    "icd_code":      ["R11",      "E11.9",     "I10",      "K29.7"],
-    "icd_code_2":    ["K29.7",    "",          "",         ""],
-    "cpt_code":      ["99213",    "99285",     "99213",    "99213"],
-    "amount":        [357,        6200,        800,        1100],
-    "approval_no":   ["",         "",          "APP99999", "APP12345"],
-    "patient_signed":[ True,      True,        True,       True],
-    "drugs":         [
-        "riack plus|daroxime|paracetamol|pantozol|dansetron",
-        "metformin|insulin",
-        "amlodipine",
-        "riack plus|pantoprazole",
-    ],
-}
+SEVERITY_COLOR = {"عالي": "#ef4444", "متوسط": "#f59e0b", "منخفض": "#22c55e"}
+SEVERITY_ICON  = {"عالي": "🔴",       "متوسط": "🟡",       "منخفض": "🟢"}
 
-SEVERITY_BADGE = {
-    "عالي":  "🔴",
-    "متوسط": "🟡",
-}
 
-ICD_HINTS = {
-    "R11":   "R11 = Nausea & Vomiting — عَرَض، يجب ألا يكون تشخيصاً رئيسياً",
-    "K29.7": "K29.7 = Gastritis — استخدم K29.70 إذا كان بسبب H. pylori",
-    "K29.70":"K29.70 = Gastritis with H. pylori — الكود الصحيح مع علاج H. pylori",
-    "E11.9": "E11.9 = Type 2 Diabetes — أكود CPT المقبولة: 99213, 99214, 80047",
-    "I10":   "I10 = Hypertension — أكواد CPT المقبولة: 99213, 99214, 93000",
-    "J18.9": "J18.9 = Pneumonia — أكواد CPT المقبولة: 99213, 99214, 71046",
-}
+def _load_doctors():
+    if DOCTORS_PATH.exists():
+        return json.loads(DOCTORS_PATH.read_text(encoding="utf-8"))
+    return []
 
 
 def render(_df, user):
-    st.markdown("## محرك تحليل أخطاء اليوكاف (UCAAF Analyzer)")
-    st.caption("فحص فوري للمطالبات قبل الإرسال — يكشف أخطاء ICD/CPT، الأدوية، الموافقات، وترتيب الأكواد")
+    st.markdown("## 🔍 فحص مطالبة يوكاف — UCAAF Checker")
+    st.caption("أدخل بيانات الحالة لفحص الأخطاء فوراً قبل الإرسال للتأمين")
     st.divider()
 
-    tab1, tab2, tab3 = st.tabs(["🔍 فحص مطالبة واحدة", "📂 رفع ملف CSV جماعي", "📖 مرجع الأكواد"])
+    doctors = _load_doctors()
+    doc_options = [f"{d['id']} — {d['name']}" for d in doctors]
 
-    # ════════════════════════════════════════════════════════════════
-    with tab1:
-        st.markdown("### أدخل بيانات المطالبة للفحص الفوري")
-
-        with st.form("single_claim"):
-            c1, c2 = st.columns(2)
-            with c1:
-                claim_id    = st.text_input("رقم المطالبة", "CLM-XXXX")
-                patient_id  = st.text_input("الرقم الطبي للمريض")
-                patient_age = st.number_input("عمر المريض (سنة)", min_value=0, max_value=120, value=30)
-                icd_primary = st.text_input("كود التشخيص الرئيسي (ICD-10)", "K29.70",
-                                            help="مثال: K29.70 | N97.0 | J45.9")
-                icd_second  = st.text_input("كود التشخيص الثانوي (اختياري)", "R11")
-                service_dt  = st.date_input("تاريخ الخدمة")
-                ucaf_type   = st.selectbox("نوع اليوكاف", ["UCAF-1", "UCAF-2", "UCAF-3"])
-                patient_type_sel = st.selectbox("نوع المريض", ["outpatient", "inpatient"])
-            with c2:
-                cpt         = st.text_input("كود الإجراء CPT", "99213")
-                amount      = st.number_input("المبلغ (ر.س)", min_value=0.0, value=357.0, step=50.0)
-                approval    = st.text_input("رقم الموافقة المسبقة (إن وجد)")
-                chief_c     = st.text_input("الشكوى الرئيسية (Chief Complaint)",
-                                            help="مثال: headache | wants to conceive | difficult breathing")
-                drugs_raw   = st.text_area("الأدوية والخدمات (افصل بـ |)",
-                                           "riack plus|daroxime|paracetamol|pantozol|dansetron",
-                                           height=70)
-                signed      = st.checkbox("المريض وقّع نموذج الموافقة", value=True)
-                cb_infert   = st.checkbox("مربع «infertility» مُفعَّل في النموذج", value=False)
-                cb_preg     = st.checkbox("مربع «pregnancy/indicate» مُفعَّل", value=False)
-
-            submitted = st.form_submit_button("⚡ فحص الآن", use_container_width=True)
-
-        if submitted:
-            row = {
-                "claim_id":       claim_id,
-                "patient_id":     patient_id,
-                "age":            patient_age,
-                "icd_code":       icd_primary.strip(),
-                "icd_code_2":     icd_second.strip(),
-                "cpt_code":       cpt.strip(),
-                "amount":         amount,
-                "approval_no":    approval.strip(),
-                "service_date":   str(service_dt),
-                "patient_signed": signed,
-                "drugs":          drugs_raw.lower(),
-                "ucaf_type":      ucaf_type,
-                "patient_type":   patient_type_sel,
-                "cb_infertility": cb_infert,
-                "cb_pregnancy":   cb_preg,
-                "chief_complaint":chief_c.lower(),
-            }
-            result = analyze(row)
-
-            if result.has_errors:
-                st.error(f"⚠️ تم اكتشاف **{len(result.errors)} خطأ** — الخطورة الإجمالية: {result.severity}")
-                for e in result.errors:
-                    badge = SEVERITY_BADGE.get(e["level"], "🟡")
-                    with st.container():
-                        st.markdown(
-                            f"""
-                            <div style="background:#1e293b;border-radius:10px;padding:14px 18px;
-                                        border-left:4px solid {'#ef4444' if e['level']=='عالي' else '#f59e0b'};
-                                        margin:6px 0">
-                              <div style="color:#f1f5f9;font-size:14px;font-weight:600">
-                                {badge} [{e['code']}] {e['msg']}
-                              </div>
-                              <div style="color:#22c55e;font-size:12px;margin-top:6px">
-                                ✅ الحل: {e.get('fix','')}
-                              </div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
+    # ── Form ──────────────────────────────────────────────────────────
+    with st.form("ucaaf_checker", clear_on_submit=False):
+        st.markdown("### 👤 بيانات المريض والطبيب")
+        r1c1, r1c2, r1c3 = st.columns(3)
+        with r1c1:
+            patient_name = st.text_input("اسم المريض")
+            patient_id   = st.text_input("الرقم الطبي للمريض")
+        with r1c2:
+            patient_age  = st.number_input("العمر (سنة)", min_value=0, max_value=120, value=30)
+            gender       = st.selectbox("الجنس", ["ذكر", "أنثى"])
+        with r1c3:
+            service_dt   = st.date_input("تاريخ الخدمة")
+            if doc_options:
+                doc_sel  = st.selectbox("الطبيب المعالج", doc_options)
             else:
-                st.success("✅ المطالبة سليمة — لا توجد أخطاء في اليوكاف، جاهزة للإرسال")
+                doc_sel  = st.text_input("الطبيب المعالج")
 
-        # ICD hint box
-        if icd_primary in ICD_HINTS:
-            st.info(f"💡 {ICD_HINTS[icd_primary]}")
+        st.divider()
+        st.markdown("### 📋 بيانات اليوكاف")
+        r2c1, r2c2, r2c3 = st.columns(3)
+        with r2c1:
+            ucaf_type    = st.selectbox("نوع اليوكاف", ["UCAF-1 (خارجي)", "UCAF-2 (داخلي)"])
+            patient_type = st.selectbox("نوع المريض", ["خارجي (outpatient)", "داخلي (inpatient)"])
+        with r2c2:
+            icd_primary  = st.text_input("كود التشخيص الرئيسي ICD-10 *", placeholder="مثال: K29.70")
+            icd_second   = st.text_input("كود التشخيص الثانوي (اختياري)", placeholder="مثال: R11")
+        with r2c3:
+            cpt          = st.text_input("كود الإجراء CPT *", placeholder="مثال: 99213")
+            amount       = st.number_input("المبلغ المطالب به (ر.س) *", min_value=0.0, step=50.0)
 
-    # ════════════════════════════════════════════════════════════════
-    with tab2:
-        sample_df  = pd.DataFrame(SAMPLE_DATA)
-        sample_csv = sample_df.to_csv(index=False).encode("utf-8-sig")
-        st.download_button("⬇️ تحميل نموذج CSV للاختبار", sample_csv,
-                           "ucaaf_sample.csv", "text/csv")
+        st.divider()
+        st.markdown("### 💊 الأدوية والخدمات")
+        drugs_raw = st.text_area(
+            "اكتب الأدوية والخدمات (افصل بعلامة |)",
+            placeholder="مثال: riack plus|pantozol|paracetamol",
+            height=80,
+        )
+        chief_c = st.text_input(
+            "الشكوى الرئيسية (Chief Complaint)",
+            placeholder="مثال: ألم شرسوفي | رغبة في الإنجاب | صعوبة التنفس"
+        )
 
-        uploaded = st.file_uploader("اختر ملف CSV", type=["csv"])
+        st.divider()
+        st.markdown("### ✅ المربعات الإلزامية والموافقات")
+        r4c1, r4c2, r4c3 = st.columns(3)
+        with r4c1:
+            signed    = st.checkbox("✔ المريض وقّع نموذج الموافقة", value=True)
+        with r4c2:
+            cb_infert = st.checkbox("☑ تفعيل مربع «infertility»", value=False)
+            cb_preg   = st.checkbox("☑ تفعيل مربع «pregnancy/indicate»", value=False)
+        with r4c3:
+            approval  = st.text_input("رقم الموافقة المسبقة (Prior Auth)", placeholder="APP-XXXXX")
 
-        if uploaded:
-            try:
-                udf = pd.read_csv(io.StringIO(uploaded.read().decode("utf-8-sig")))
-            except Exception as e:
-                st.error(f"تعذّر قراءة الملف: {e}")
-                return
+        st.divider()
+        submitted = st.form_submit_button(
+            "⚡ فحص الأخطاء الآن",
+            use_container_width=True,
+            type="primary",
+        )
 
-            missing = [c for c in REQUIRED_COLS if c not in udf.columns]
-            if missing:
-                st.error(f"الأعمدة التالية مفقودة: {', '.join(missing)}")
-                return
+    # ── Results ───────────────────────────────────────────────────────
+    if submitted:
+        if not icd_primary.strip():
+            st.error("⚠️ يرجى إدخال كود التشخيص الرئيسي ICD-10")
+            return
+        if not cpt.strip():
+            st.error("⚠️ يرجى إدخال كود الإجراء CPT")
+            return
 
-            # Fill optional columns if absent
-            for col, default in [("icd_code_2",""), ("drugs",""), ("patient_signed",True)]:
-                if col not in udf.columns:
-                    udf[col] = default
+        ucaf_val  = "UCAF-1" if "1" in ucaf_type else "UCAF-2"
+        ptype_val = "outpatient" if "خارجي" in patient_type else "inpatient"
 
-            results = analyze_dataframe(udf)
-            total   = len(results)
-            errors  = [r for r in results if r.has_errors]
-            clean   = total - len(errors)
+        row = {
+            "claim_id":        f"CHECK-{patient_id or 'XXX'}",
+            "patient_id":      patient_id.strip(),
+            "patient_name":    patient_name.strip(),
+            "age":             int(patient_age),
+            "gender":          gender,
+            "icd_code":        icd_primary.strip().upper(),
+            "icd_code_2":      icd_second.strip().upper(),
+            "cpt_code":        cpt.strip(),
+            "amount":          float(amount),
+            "approval_no":     approval.strip(),
+            "service_date":    str(service_dt),
+            "patient_signed":  signed,
+            "drugs":           drugs_raw.strip().lower(),
+            "ucaf_type":       ucaf_val,
+            "patient_type":    ptype_val,
+            "cb_infertility":  cb_infert,
+            "cb_pregnancy":    cb_preg,
+            "chief_complaint": chief_c.strip().lower(),
+        }
 
-            kpi_row([
-                {"label": "إجمالي السجلات",  "value": total,       "color": "#6366f1"},
-                {"label": "سليمة",            "value": clean,       "color": "#22c55e"},
-                {"label": "تحتوي أخطاء",      "value": len(errors), "color": "#ef4444",
-                 "delta": f"{round(len(errors)/total*100,1)}% من الملفات"},
-            ])
+        result = analyze(row)
+        st.divider()
 
-            if not errors:
-                st.success("✅ جميع السجلات سليمة — لا توجد أخطاء")
-                return
+        if not result.has_errors:
+            st.success("✅ المطالبة سليمة — لا توجد أخطاء، جاهزة للإرسال")
+            st.balloons()
+        else:
+            high = [e for e in result.errors if e["level"] == "عالي"]
+            mid  = [e for e in result.errors if e["level"] != "عالي"]
 
-            # Build flat error table
-            all_errors = []
-            for r in errors:
-                for e in r.errors:
-                    all_errors.append({
-                        "رقم المطالبة": r.claim_id,
-                        "كود الخطأ":    e["code"],
-                        "الخطورة":      e["level"],
-                        "وصف الخطأ":   e["msg"],
-                        "الحل المقترح": e.get("fix", ""),
-                    })
-            err_df = pd.DataFrame(all_errors)
-
-            # Chart
-            st.plotly_chart(
-                error_bar_chart(err_df["وصف الخطأ"], "توزيع الأخطاء المكتشفة"),
-                use_container_width=True,
+            st.error(
+                f"⚠️ تم اكتشاف **{len(result.errors)} خطأ** "
+                f"({len(high)} عالي الخطورة، {len(mid)} متوسط)"
             )
 
-            # Severity breakdown
-            col1, col2 = st.columns(2)
-            with col1:
-                high_cnt = (err_df["الخطورة"] == "عالي").sum()
-                st.metric("أخطاء عالية الخطورة 🔴", high_cnt)
-            with col2:
-                med_cnt = (err_df["الخطورة"] == "متوسط").sum()
-                st.metric("أخطاء متوسطة الخطورة 🟡", med_cnt)
-
-            st.markdown("### تفاصيل الأخطاء مع الحلول")
-            st.dataframe(err_df, use_container_width=True, hide_index=True)
-
-            csv_out = err_df.to_csv(index=False).encode("utf-8-sig")
-            st.download_button("⬇️ تصدير الأخطاء مع الحلول (CSV)",
-                               csv_out, "ucaaf_errors_with_fixes.csv", "text/csv")
-
-    # ════════════════════════════════════════════════════════════════
-    with tab3:
-        st.markdown("### مرجع سريع — أكواد ICD-10 الشائعة في العيادة")
-        ref = [
-            {"ICD-10": "K29.70", "الوصف": "التهاب المعدة بسبب H. pylori",
-             "أكواد CPT المقبولة": "99213, 99214",
-             "ملاحظة": "✅ استخدمه مع Riack Plus / Clarithromycin"},
-            {"ICD-10": "K29.7",  "الوصف": "التهاب المعدة غير محدد",
-             "أكواد CPT المقبولة": "99213, 99214",
-             "ملاحظة": "⚠️ لا يبرر وصف Riack Plus أو Daroxime"},
-            {"ICD-10": "R11",    "الوصف": "غثيان وقيء",
-             "أكواد CPT المقبولة": "—",
-             "ملاحظة": "🚫 عَرَض — يجب أن يكون 2nd code وليس Primary"},
-            {"ICD-10": "J45.9",  "الوصف": "ربو غير محدد",
-             "أكواد CPT المقبولة": "99213, 99214, 94640",
-             "ملاحظة": "⚠️ لا يبرر كورتيزون جهازي — استخدم J45.5 للحالات الحادة"},
-            {"ICD-10": "J45.5",  "الوصف": "ربو مستمر شديد",
-             "أكواد CPT المقبولة": "99213, 99214, 94640",
-             "ملاحظة": "✅ يبرر Dexamethasone / Prednisolone"},
-            {"ICD-10": "J45.4",  "الوصف": "ربو مستمر متوسط",
-             "أكواد CPT المقبولة": "99213, 99214, 94640",
-             "ملاحظة": "✅ يبرر الكورتيزون الجهازي"},
-            {"ICD-10": "J18.9",  "الوصف": "التهاب رئوي",
-             "أكواد CPT المقبولة": "99213, 99214, 71046",
-             "ملاحظة": "✅ يبرر المضادات الحيوية"},
-            {"ICD-10": "E11.9",  "الوصف": "سكري النوع الثاني",
-             "أكواد CPT المقبولة": "99213, 99214, 80047, 83036", "ملاحظة": ""},
-            {"ICD-10": "I10",    "الوصف": "ارتفاع ضغط الدم",
-             "أكواد CPT المقبولة": "99213, 99214, 93000", "ملاحظة": ""},
-            {"ICD-10": "B96.81", "الوصف": "H. pylori كعامل مُسبِّب",
-             "أكواد CPT المقبولة": "—",
-             "ملاحظة": "✅ يُضاف كـ 2nd code لتبرير العلاج الثلاثي"},
-            {"ICD-10": "N97.0",  "الوصف": "عقم أنثوي — عدم إباضة",
-             "أكواد CPT المقبولة": "99213, 99214",
-             "ملاحظة": "🚫 يُرفض بدون تفعيل مربع «infertility» + «pregnancy/indicate»"},
-            {"ICD-10": "N97.1",  "الوصف": "عقم أنثوي — منشأ قناة فالوب",
-             "أكواد CPT المقبولة": "99213, 99214",
-             "ملاحظة": "🚫 نفس الشروط — مربعا infertility و pregnancy إلزاميان"},
-            {"ICD-10": "N46.1",  "الوصف": "عقم ذكوري — قِلَّة الحيوانات المنوية",
-             "أكواد CPT المقبولة": "99213, 99214",
-             "ملاحظة": "🚫 يُرفض بدون مربع «infertility»"},
-            {"ICD-10": "Z31.4",  "الوصف": "فحوصات الخصوبة والإنجاب",
-             "أكواد CPT المقبولة": "99213, 99214",
-             "ملاحظة": "⚠️ بعض التأمينات لا تُغطي حالات العقم فوق عمر 40"},
-        ]
-        st.dataframe(pd.DataFrame(ref), use_container_width=True, hide_index=True)
-
-        st.markdown("### الأخطاء الأكثر شيوعاً في العيادة")
-        tips = [
-            ("ERR-06", "عالي",  "كود عَرَض (R11, R51...) كتشخيص رئيسي",
-             "ضع التشخيص السببي في الأول والعَرَض في الثاني"),
-            ("ERR-07", "عالي",  "علاج H. pylori (Riack Plus) بدون كود K29.70",
-             "أضف K29.70 أو B96.81 كلما وُصف Riack Plus أو Clarithromycin"),
-            ("ERR-08", "عالي",  "مضاد حيوي (Daroxime/Cefuroxime) بدون تشخيص عدوى",
-             "تأكد أن التشخيص يبرر المضاد أو أضف الكود الصحيح"),
-            ("ERR-10", "عالي",  "كورتيزون جهازي مع J45.9 — يُقبل فقط مع J45.4 أو J45.5",
-             "غيّر الكود إلى J45.5 إذا كانت الحالة شديدة أو احذف الكورتيزون الجهازي"),
-            ("ERR-11", "عالي",  "ثلاثة كورتيزونات في وصفة واحدة (Pulmicort + Dexamethasone + Respred)",
-             "احتفظ بنوع واحد أو اثنين بمبرر سريري موثّق"),
-            ("ERR-12", "متوسط", "كود الدواء في السطر يختلف عن التشخيص الرئيسي (J45.5 vs J45.9)",
-             "وحّد كود ICD في جميع سطور الوصفة"),
-            ("ERR-13", "عالي",  "تشخيص N97.0 (عقم) بدون تفعيل مربع «infertility»",
-             "فعّل المربع قبل الإرسال — هذا أكثر أسباب رفض حالات العقم شيوعاً"),
-            ("ERR-14", "عالي",  "تحاليل FSH/Prolactin/AMH بدون مربع infertility",
-             "فعّل المربع + تأكد من وجود N97.x في التشخيص"),
-            ("ERR-16", "عالي",  "UCAF-2 مع حالة خارجية (Outpatient)",
-             "استخدم UCAF-1 للحالات الخارجية"),
-            ("ERR-17", "متوسط", "مريضة فوق 40 سنة مع تشخيص عقم",
-             "بعض التأمينات تشترط Prior Auth خاص — تأكد قبل الإرسال"),
-            ("ERR-01", "عالي",  "عدم تطابق ICD مع CPT",
-             "راجع جدول الأكواد في هذا التبويب"),
-            ("ERR-02", "عالي",  "تجاوز الحد المالي (5000 ر.س) بدون موافقة مسبقة",
-             "احصل على Prior Authorization قبل الإرسال"),
-        ]
-        for code, level, prob, fix in tips:
-            badge = "🔴" if level == "عالي" else "🟡"
+            # Summary bar
             st.markdown(
                 f"""
-                <div style="background:#1e293b;border-radius:8px;padding:12px 16px;
-                            border-left:4px solid {'#ef4444' if level=='عالي' else '#f59e0b'};margin:5px 0">
-                  <span style="color:#94a3b8;font-size:12px">{badge} {code}</span>
-                  <div style="color:#f1f5f9;font-size:14px">{prob}</div>
-                  <div style="color:#22c55e;font-size:12px">✅ {fix}</div>
+                <div style="background:#1e293b;border-radius:10px;padding:14px 20px;
+                            margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap">
+                  <div><span style="color:#94a3b8;font-size:12px">المريض</span>
+                       <div style="color:#f1f5f9;font-weight:700">{patient_name or '—'}</div></div>
+                  <div><span style="color:#94a3b8;font-size:12px">ICD</span>
+                       <div style="color:#f1f5f9;font-weight:700">{icd_primary.upper()}</div></div>
+                  <div><span style="color:#94a3b8;font-size:12px">CPT</span>
+                       <div style="color:#f1f5f9;font-weight:700">{cpt}</div></div>
+                  <div><span style="color:#94a3b8;font-size:12px">المبلغ</span>
+                       <div style="color:#ef4444;font-weight:700">{amount:,.0f} ر.س</div></div>
+                  <div><span style="color:#94a3b8;font-size:12px">الخطورة الإجمالية</span>
+                       <div style="color:{'#ef4444' if result.severity=='عالي' else '#f59e0b'};font-weight:700">
+                         {result.severity}</div></div>
                 </div>
                 """,
                 unsafe_allow_html=True,
             )
+
+            # Error cards
+            st.markdown("### الأخطاء المكتشفة والحلول")
+            for e in result.errors:
+                color = SEVERITY_COLOR.get(e["level"], "#f59e0b")
+                icon  = SEVERITY_ICON.get(e["level"], "🟡")
+                st.markdown(
+                    f"""
+                    <div style="background:#1e293b;border-radius:10px;padding:16px 20px;
+                                border-left:4px solid {color};margin:8px 0">
+                      <div style="display:flex;justify-content:space-between;align-items:center">
+                        <span style="background:{color};color:white;border-radius:4px;
+                                     padding:2px 8px;font-size:11px">{icon} {e['level']}</span>
+                        <span style="color:#64748b;font-size:12px">{e['code']}</span>
+                      </div>
+                      <div style="color:#f1f5f9;font-size:14px;font-weight:600;margin-top:8px">
+                        {e['msg']}
+                      </div>
+                      <div style="color:#22c55e;font-size:13px;margin-top:6px">
+                        ✅ الحل: {e.get('fix', '')}
+                      </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
