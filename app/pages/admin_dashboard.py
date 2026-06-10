@@ -84,6 +84,23 @@ def render(df: pd.DataFrame, user: dict):
     st.markdown("## لوحة تحكم الإدارة والتدقيق")
     st.divider()
 
+    # Ensure required columns exist
+    for col in ["status","amount","recovered","errors","error_count","doctor_name",
+                "specialty","icd_code","cpt_code","service_date","claim_id",
+                "patient_name"]:
+        if col not in df.columns:
+            df[col] = "" if col not in ["amount","recovered","error_count"] else 0
+
+    df["amount"]      = pd.to_numeric(df["amount"],      errors="coerce").fillna(0)
+    df["recovered"]   = pd.to_numeric(df["recovered"],   errors="coerce").fillna(0)
+    df["error_count"] = pd.to_numeric(df["error_count"], errors="coerce").fillna(0)
+    df["errors"]      = df["errors"].fillna("")
+    df["status"]      = df["status"].fillna("")
+
+    if len(df) == 0:
+        st.info("📭 لا توجد حالات مسجلة بعد. أضف حالات من صفحة **📦 معالجة جماعية**.")
+        return
+
     # ── Global KPIs ───────────────────────────────────────────────────
     total        = len(df)
     accepted     = (df["status"] == "مقبول").sum()

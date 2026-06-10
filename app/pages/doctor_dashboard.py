@@ -24,7 +24,17 @@ def _smart_alerts(ddf: pd.DataFrame) -> list[dict]:
 
 def render(df: pd.DataFrame, user: dict):
     doctor_id = user["doctor_id"]
-    ddf       = df[df["doctor_id"] == doctor_id].copy()
+
+    # Ensure required columns exist
+    for col in ["doctor_id","status","amount","recovered","errors","error_count"]:
+        if col not in df.columns:
+            df[col] = "" if col not in ["amount","recovered","error_count"] else 0
+    df["amount"]    = pd.to_numeric(df["amount"],    errors="coerce").fillna(0)
+    df["recovered"] = pd.to_numeric(df["recovered"], errors="coerce").fillna(0)
+    df["errors"]    = df["errors"].fillna("")
+    df["status"]    = df["status"].fillna("")
+
+    ddf = df[df["doctor_id"].astype(str) == str(doctor_id)].copy()
 
     st.markdown(f"## لوحة تحكم — {user['display_name']}")
     if len(ddf):
