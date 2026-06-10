@@ -206,6 +206,9 @@ def render(_df_existing, user):
 
     # Use existing data if no upload
     if uploaded is None:
+        if len(_df_existing) == 0:
+            st.info("📭 لا توجد بيانات حالية. ارفع ملف Excel أو CSV لبدء المعالجة.")
+            return
         use_existing = st.checkbox(
             f"استخدم بيانات العيادة الحالية ({len(_df_existing)} حالة) للعرض التجريبي",
             value=True,
