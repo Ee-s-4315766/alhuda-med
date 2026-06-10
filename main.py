@@ -141,10 +141,10 @@ def main():
 
         if user["role"] == "admin":
             pages = {
-                "📊 لوحة الإدارة":          "admin",
+                "🩺 لوحة التدقيق":           "audit",
                 "📅 التقرير الشهري":        "monthly",
-                "📦 معالجة جماعية":         "bulk",
-                "🔍 محرك تحليل اليوكاف":    "ucaaf",
+                "📦 رفع الحالات":           "bulk",
+                "🔍 فحص اليوكاف / ديكاف":   "ucaaf",
                 "🗂️ كتالوج الأكواد":        "catalog",
                 "🏥 شركات التأمين":         "insurance",
                 "✅ قائمة التحقق":          "checklist",
@@ -178,7 +178,10 @@ def main():
 
     # Render selected page
     selected = pages[page]
-    if selected == "bulk":
+    if selected == "audit":
+        from app.pages.audit_dashboard import render
+        render(df, user)
+    elif selected == "bulk":
         from app.pages.bulk_processing import render
         render(df, user)
     elif selected == "admin":
