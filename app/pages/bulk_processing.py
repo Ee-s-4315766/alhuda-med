@@ -101,6 +101,64 @@ REQUIRED_COLS = [
     "amount", "service_date",
 ]
 
+# Flexible column mapping: Arabic / English variants → internal name
+COLUMN_MAP = {
+    # claim_id
+    "رقم المطالبة": "claim_id", "claim id": "claim_id", "claim no": "claim_id",
+    "claimid": "claim_id", "claim_no": "claim_id",
+    # patient_id
+    "الرقم الطبي": "patient_id", "patient id": "patient_id", "patient no": "patient_id",
+    "patientid": "patient_id", "رقم المريض": "patient_id",
+    # patient_name
+    "اسم المريض": "patient_name", "patient name": "patient_name", "patientname": "patient_name",
+    # doctor_name
+    "اسم الطبيب": "doctor_name", "doctor": "doctor_name", "doctor name": "doctor_name",
+    "doctorname": "doctor_name",
+    # specialty
+    "التخصص": "specialty", "specialty": "specialty", "تخصص": "specialty",
+    # icd_code
+    "رمز التشخيص": "icd_code", "icd": "icd_code", "icd-10": "icd_code",
+    "icd10": "icd_code", "كود التشخيص": "icd_code", "diagnosis code": "icd_code",
+    # icd_code_2
+    "رمز التشخيص الثانوي": "icd_code_2", "icd2": "icd_code_2", "icd-10-2": "icd_code_2",
+    "secondary icd": "icd_code_2",
+    # cpt_code
+    "الإجراء": "cpt_code", "cpt": "cpt_code", "cpt code": "cpt_code",
+    "cptcode": "cpt_code", "كود الإجراء": "cpt_code", "procedure code": "cpt_code",
+    # amount
+    "المبلغ": "amount", "amount": "amount", "مبلغ": "amount", "القيمة": "amount",
+    "value": "amount", "total": "amount",
+    # service_date
+    "تاريخ الخدمة": "service_date", "service date": "service_date",
+    "servicedate": "service_date", "visit date": "service_date", "تاريخ الزيارة": "service_date",
+    # age
+    "العمر": "age", "age": "age", "السن": "age",
+    # gender
+    "الجنس": "gender", "gender": "gender", "sex": "gender",
+    # approval_no
+    "رقم الموافقة": "approval_no", "approval no": "approval_no", "approval number": "approval_no",
+    "approval_number": "approval_no", "موافقة": "approval_no",
+    # drugs
+    "الأدوية": "drugs", "drugs": "drugs", "medications": "drugs", "دواء": "drugs",
+    # chief_complaint
+    "الشكوى": "chief_complaint", "chief complaint": "chief_complaint",
+    "chiefcomplaint": "chief_complaint", "الشكوى الرئيسية": "chief_complaint",
+}
+
+
+def _normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Strip whitespace and map column names to internal names using COLUMN_MAP."""
+    df = df.copy()
+    df.columns = df.columns.str.strip()
+    rename = {}
+    for col in df.columns:
+        key = col.strip().lower()
+        if key in COLUMN_MAP and col not in COLUMN_MAP.values():
+            rename[col] = COLUMN_MAP[key]
+    if rename:
+        df = df.rename(columns=rename)
+    return df
+
 # ─── Build Excel template with sample rows ───────────────────────────────────
 SAMPLE_ROWS = [
     ["CLM-001","أحمد محمد","P111111",35,"ذكر","د. أحمد الزهراني","2026-05-01",
@@ -229,9 +287,17 @@ def render(_df_existing, user):
             st.error(f"تعذّر قراءة الملف: {e}")
             return
 
+        df = _normalize_columns(df)
+
         missing = [c for c in REQUIRED_COLS if c not in df.columns]
         if missing:
-            st.error(f"الأعمدة التالية مفقودة: {', '.join(missing)}")
+            st.error(
+                f"⚠️ تعذّر قراءة الملف — الأعمدة التالية مفقودة أو بأسماء غير معروفة:\n\n"
+                f"**{', '.join(missing)}**\n\n"
+                f"الأعمدة الإلزامية المطلوبة: `claim_id`, `patient_id`, `icd_code`, "
+                f"`cpt_code`, `amount`, `service_date`\n\n"
+                f"💡 حمّل نموذج Excel أعلاه لمعرفة الأعمدة الصحيحة."
+            )
             return
 
         df = _prepare_df(df)
