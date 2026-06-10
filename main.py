@@ -91,11 +91,24 @@ def login_page():
         st.markdown(
             """
             <div style="background:#1e293b;border-radius:10px;padding:16px;margin-top:16px;font-size:13px;color:#94a3b8">
-            <b>حسابات تجريبية:</b><br>
+            <b>بيانات الدخول:</b><br>
             🔑 <code>admin</code> / <code>admin123</code> — مدير النظام<br>
-            👨‍⚕️ <code>d001</code> / <code>doctor123</code> — د. أحمد الزهراني<br>
-            👩‍⚕️ <code>d002</code> / <code>doctor123</code> — د. سارة المطيري<br>
-            👨‍⚕️ <code>d003</code> / <code>doctor123</code> — د. خالد العتيبي
+            <br>
+            <b>الأطباء (كلمة المرور: doctor123):</b><br>
+            👨‍⚕️ <code>d1</code> — د. سعد عبدالفتاح (جراحة)<br>
+            👩‍⚕️ <code>d3</code> — د. منه الله صدقي (نساء وولادة)<br>
+            👨‍⚕️ <code>d4</code> — د. محمد الجعبري (أنف وأذن)<br>
+            👨‍⚕️ <code>d5</code> — د. محمد عبدالعزيز (باطنية)<br>
+            👨‍⚕️ <code>d8</code> — د. فريد الخولي (أسنان)<br>
+            👨‍⚕️ <code>d11</code> — د. محمد عثمان (طب أسرة)<br>
+            👨‍⚕️ <code>d12</code> — د. محمد عبده (طب أسرة)<br>
+            👩‍⚕️ <code>d13</code> — د. سمر أبو شعيشع (طب أسرة)<br>
+            👩‍⚕️ <code>d18</code> — د. اماني ابو الخير (أطفال)<br>
+            👩‍⚕️ <code>d19</code> — د. نداء مدين (طب أسرة)<br>
+            👨‍⚕️ <code>d20</code> — د. عمرو العمري (أسنان)<br>
+            👨‍⚕️ <code>d24</code> — د. ممدوح سيد محمد (طب أسرة)<br>
+            👨‍⚕️ <code>d26</code> — د. اسلام فريد (عظام)<br>
+            👩‍⚕️ <code>d28</code> — د. رنا الهلالي (جلدية)
             </div>
             """,
             unsafe_allow_html=True,
