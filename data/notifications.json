@@ -1,0 +1,14 @@
+{
+  "1": [
+    {
+      "id": "0b606767",
+      "type": "error_found",
+      "title": "اختبار إشعار",
+      "message": "هذا اختبار للنظام",
+      "claim_id": "CLM-001",
+      "level": "عالي",
+      "read": false,
+      "timestamp": "2026-06-10 14:18"
+    }
+  ]
+}

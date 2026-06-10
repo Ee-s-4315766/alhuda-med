@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 from app.components import kpi_row, status_pie, error_bar_chart, monthly_trend, alert_box
 from app.ucaaf_analyzer import analyze_dataframe
+from app.notifications import get_notifications, get_unread_count, mark_all_read
 
 
 def _smart_alerts(ddf: pd.DataFrame) -> list[dict]:
@@ -29,6 +30,26 @@ def render(df: pd.DataFrame, user: dict):
     if len(ddf):
         st.caption(f"التخصص: **{ddf['specialty'].iloc[0]}**")
     st.divider()
+
+    # ── Notification banner ───────────────────────────────────────────
+    unread_notifs = get_notifications(doctor_id, unread_only=True)
+    if unread_notifs:
+        n_count = len(unread_notifs)
+        err_notifs = [n for n in unread_notifs if n["type"] == "error_found"]
+        new_notifs = [n for n in unread_notifs if n["type"] == "new_claim"]
+        banner_parts = []
+        if new_notifs:
+            banner_parts.append(f"📋 {len(new_notifs)} حالة جديدة أُضيفت")
+        if err_notifs:
+            banner_parts.append(f"⚠️ {len(err_notifs)} خطأ يحتاج تصحيح")
+        st.warning(
+            f"🔔 لديك {n_count} إشعار جديد — " + " | ".join(banner_parts)
+            + " — اضغط على **🔔 إشعاراتي** من القائمة لعرض التفاصيل"
+        )
+        if st.button("تحديد الكل كمقروء", key="dismiss_notifs"):
+            mark_all_read(doctor_id)
+            st.rerun()
+        st.divider()
 
     if len(ddf) == 0:
         st.info("لا توجد حالات مسجلة لهذا الطبيب بعد.")

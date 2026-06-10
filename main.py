@@ -138,8 +138,12 @@ def main():
                 "⚙️ الإعدادات":             "settings",
             }
         else:
+            from app.notifications import get_unread_count
+            unread = get_unread_count(user.get("doctor_id", ""))
+            notif_label = f"🔔 إشعاراتي ({unread})" if unread else "🔔 إشعاراتي"
             pages = {
                 "📋 لوحتي الشخصية":         "doctor",
+                notif_label:                 "notifications",
                 "📅 تقريري الشهري":         "monthly",
                 "📦 معالجة جماعية":         "bulk",
                 "🔍 محرك تحليل اليوكاف":    "ucaaf",
@@ -178,6 +182,9 @@ def main():
         render(df, user)
     elif selected == "checklist":
         from app.pages.checklist import render
+        render(df, user)
+    elif selected == "notifications":
+        from app.pages.notifications_page import render
         render(df, user)
     elif selected == "settings":
         from app.pages.settings import render

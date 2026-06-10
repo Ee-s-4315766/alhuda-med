@@ -3,12 +3,83 @@
 رفع Excel/CSV، تحليل فوري، قائمة الأولويات، تصدير تقرير شامل
 """
 import io
+from pathlib import Path
 import streamlit as st
 import pandas as pd
 import plotly.express as px
 from app.ucaaf_analyzer import analyze_dataframe
 from app.icd_cpt_db import ICD_DATABASE, CPT_DATABASE
 from app.components import kpi_row, alert_box
+
+CLAIMS_PATH = Path(__file__).parent.parent.parent / "data" / "claims.csv"
+DOCTORS_PATH = Path(__file__).parent.parent.parent / "data" / "doctors.json"
+
+
+def _save_claims_and_notify(df: pd.DataFrame, user: dict):
+    """حفظ الحالات في claims.csv وإطلاق إشعارات للأطباء."""
+    import json
+    from app.notifications import notify_claims_batch
+
+    # Load doctor list to build lookup
+    doctor_lookup = {}
+    if DOCTORS_PATH.exists():
+        docs = json.loads(DOCTORS_PATH.read_text(encoding="utf-8"))
+        doctor_lookup = {d["id"]: d["name"] for d in docs}
+
+    # Ensure doctor_id column exists
+    if "doctor_id" not in df.columns:
+        df = df.copy()
+        df["doctor_id"] = ""
+
+    # Append to existing CSV
+    existing_ids = set()
+    if CLAIMS_PATH.exists():
+        try:
+            existing = pd.read_csv(CLAIMS_PATH)
+            existing_ids = set(existing["claim_id"].astype(str))
+        except Exception:
+            existing = pd.DataFrame()
+    else:
+        existing = pd.DataFrame()
+
+    # Avoid duplicates
+    new_df = df[~df["claim_id"].astype(str).isin(existing_ids)].copy()
+
+    if len(new_df) == 0:
+        st.warning("⚠️ جميع الحالات موجودة مسبقاً في السجل (تكرار في claim_id)")
+        return
+
+    # Add missing columns with defaults
+    for col in ["status","errors","error_count","recovered","icd_name",
+                "doctor_name","specialty","gender","patient_name","patient_id",
+                "age","icd_code_2","drugs","ucaf_type","patient_type",
+                "cb_infertility","cb_pregnancy","patient_signed","approval_no","chief_complaint"]:
+        if col not in new_df.columns:
+            new_df[col] = ""
+
+    new_df["status"]      = new_df["status"].replace("", "معلق").fillna("معلق")
+    new_df["recovered"]   = pd.to_numeric(new_df.get("recovered", 0), errors="coerce").fillna(0)
+    new_df["error_count"] = 0
+    new_df["errors"]      = ""
+
+    # Run analyzer and fill errors
+    from app.ucaaf_analyzer import analyze_dataframe
+    results = analyze_dataframe(new_df)
+    for i, r in enumerate(results):
+        if r.errors:
+            new_df.iloc[i, new_df.columns.get_loc("errors")] = "|".join(
+                e["msg"] for e in r.errors
+            )
+            new_df.iloc[i, new_df.columns.get_loc("error_count")] = len(r.errors)
+
+    combined = pd.concat([existing, new_df], ignore_index=True) if len(existing) else new_df
+    combined.to_csv(CLAIMS_PATH, index=False, encoding="utf-8-sig")
+
+    # Send notifications
+    notify_claims_batch(new_df, doctor_lookup)
+
+    st.success(f"✅ تم حفظ {len(new_df)} حالة وإرسال الإشعارات للأطباء!")
+    st.cache_data.clear()
 
 # ─── Excel template columns ──────────────────────────────────────────────────
 TEMPLATE_COLS = [
@@ -160,6 +231,12 @@ def render(_df_existing, user):
             return
 
         df = _prepare_df(df)
+
+        # ── Save to clinic + notify doctors ──────────────────────────
+        st.divider()
+        if st.button("💾 حفظ الحالات في سجل العيادة وإرسال إشعارات للأطباء",
+                     use_container_width=True, type="primary"):
+            _save_claims_and_notify(df, user)
 
     # ── Run analyzer ──────────────────────────────────────────────────
     with st.spinner("جاري تحليل الحالات..."):
