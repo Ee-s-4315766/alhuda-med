@@ -1,5 +1,6 @@
 """UCAAF & DCAF Entry Forms — إدخال بيانات اليوكاف/ديكاف وفحص الأخطاء فوراً"""
 import json
+import base64
 import streamlit as st
 import pandas as pd
 from pathlib import Path
@@ -245,6 +246,78 @@ def _dcaf_tab(doctors):
                 )
 
 
+def _ucaaf_pdf_html(row: dict, errors: list, clinic_name: str = "عيادة الهدى الطبية") -> str:
+    err_rows = "".join(
+        f"<tr><td>{e['code']}</td><td>{e['level']}</td><td>{e['msg']}</td><td>{e.get('fix','')}</td></tr>"
+        for e in errors
+    )
+    status_color = "#dc2626" if errors else "#16a34a"
+    status_text  = f"⚠️ {len(errors)} خطأ مكتشف" if errors else "✅ سليمة — جاهزة للإرسال"
+    return f"""<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<style>
+  body {{ font-family: Arial, sans-serif; margin: 20px; color: #111; font-size: 13px; }}
+  h1 {{ text-align: center; font-size: 18px; border-bottom: 2px solid #6366f1; padding-bottom: 8px; }}
+  .clinic {{ text-align: center; color: #555; margin-bottom: 16px; }}
+  .status {{ background: {status_color}; color: white; padding: 8px 16px;
+             border-radius: 6px; text-align: center; font-weight: bold; margin: 12px 0; }}
+  table {{ width: 100%; border-collapse: collapse; margin-top: 12px; }}
+  th {{ background: #6366f1; color: white; padding: 7px; text-align: right; }}
+  td {{ padding: 6px; border: 1px solid #ddd; }}
+  tr:nth-child(even) {{ background: #f8f8f8; }}
+  .section {{ background: #f1f5f9; padding: 10px; border-radius: 6px; margin: 10px 0; }}
+  .section h3 {{ margin: 0 0 8px 0; color: #6366f1; font-size: 14px; }}
+  .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }}
+  .field {{ display: flex; gap: 8px; }}
+  .label {{ color: #555; min-width: 140px; }}
+  .value {{ font-weight: bold; }}
+  @media print {{ button {{ display: none; }} }}
+</style>
+</head>
+<body>
+<h1>🏥 تقرير فحص مطالبة اليوكاف</h1>
+<div class="clinic">{clinic_name}</div>
+<div class="status">{status_text}</div>
+
+<div class="section">
+  <h3>👤 بيانات المريض</h3>
+  <div class="grid">
+    <div class="field"><span class="label">الاسم:</span> <span class="value">{row.get('patient_name','—')}</span></div>
+    <div class="field"><span class="label">الرقم الطبي:</span> <span class="value">{row.get('patient_id','—')}</span></div>
+    <div class="field"><span class="label">العمر:</span> <span class="value">{row.get('age','—')} سنة</span></div>
+    <div class="field"><span class="label">الجنس:</span> <span class="value">{row.get('gender','—')}</span></div>
+    <div class="field"><span class="label">تاريخ الخدمة:</span> <span class="value">{row.get('service_date','—')}</span></div>
+    <div class="field"><span class="label">نوع اليوكاف:</span> <span class="value">{row.get('ucaf_type','—')}</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>📋 بيانات الترميز</h3>
+  <div class="grid">
+    <div class="field"><span class="label">ICD الرئيسي:</span> <span class="value">{row.get('icd_code','—')}</span></div>
+    <div class="field"><span class="label">ICD الثانوي:</span> <span class="value">{row.get('icd_code_2','—') or '—'}</span></div>
+    <div class="field"><span class="label">كود CPT:</span> <span class="value">{row.get('cpt_code','—')}</span></div>
+    <div class="field"><span class="label">المبلغ:</span> <span class="value">{float(row.get('amount',0)):,.0f} ر.س</span></div>
+    <div class="field"><span class="label">رقم الموافقة:</span> <span class="value">{row.get('approval_no','—') or '—'}</span></div>
+    <div class="field"><span class="label">الأدوية:</span> <span class="value">{row.get('drugs','—')}</span></div>
+  </div>
+</div>
+
+{"<div class='section'><h3>⚠️ الأخطاء المكتشفة</h3><table><tr><th>الكود</th><th>الخطورة</th><th>الخطأ</th><th>الحل</th></tr>" + err_rows + "</table></div>" if errors else "<div class='section' style='background:#dcfce7'><h3>✅ لا توجد أخطاء</h3><p>المطالبة جاهزة للإرسال</p></div>"}
+
+<div style="text-align:center;margin-top:20px;color:#888;font-size:11px">
+  تم الفحص بواسطة منصة AlHuda Med — {row.get('service_date','')}
+</div>
+<br>
+<button onclick="window.print()" style="background:#6366f1;color:white;padding:10px 24px;
+  border:none;border-radius:6px;cursor:pointer;font-size:14px;display:block;margin:0 auto">
+  🖨️ طباعة / حفظ PDF
+</button>
+</body></html>"""
+
+
 def _ucaaf_tab(doctors):
     st.markdown("### 🏥 إدخال مطالبة UCAAF — عامة")
     doc_options = [f"{d['id']} — {d['name']}" for d in doctors]
@@ -376,6 +449,19 @@ def _ucaaf_tab(doctors):
                     </div>""",
                     unsafe_allow_html=True,
                 )
+
+        # ── PDF export ────────────────────────────────────────────────
+        st.divider()
+        st.markdown("### 📄 تصدير تقرير PDF")
+        html_content = _ucaaf_pdf_html(row, result.errors if result.has_errors else [])
+        b64 = base64.b64encode(html_content.encode("utf-8")).decode()
+        st.markdown(
+            f'<a href="data:text/html;base64,{b64}" download="ucaaf_report_{patient_id or "claim"}.html" '
+            f'style="background:#6366f1;color:white;padding:10px 20px;border-radius:8px;'
+            f'text-decoration:none;font-size:14px;display:inline-block">⬇️ تحميل التقرير</a>'
+            f'<span style="color:#94a3b8;font-size:12px;margin-right:12px"> — افتح الملف ثم اضغط Ctrl+P للطباعة أو الحفظ كـ PDF</span>',
+            unsafe_allow_html=True,
+        )
 
 
 def render(_df, user):

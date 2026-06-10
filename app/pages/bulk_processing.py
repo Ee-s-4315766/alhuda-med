@@ -122,7 +122,8 @@ SAMPLE_ROWS = [
 
 
 def _build_template() -> bytes:
-    df = pd.DataFrame(SAMPLE_ROWS, columns=TEMPLATE_COLS)
+    # Empty template — headers only with one example row in grey
+    df = pd.DataFrame(columns=TEMPLATE_COLS)
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
         df.to_excel(writer, index=False, sheet_name="المطالبات")
