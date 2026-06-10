@@ -51,7 +51,7 @@ def _save_claims_and_notify(df: pd.DataFrame, user: dict):
 
     # Add missing columns with defaults
     for col in ["status","errors","error_count","recovered","icd_name",
-                "doctor_name","specialty","gender","patient_name","patient_id",
+                "doctor_id","doctor_name","specialty","gender","patient_name","patient_id",
                 "age","icd_code_2","drugs","ucaf_type","patient_type",
                 "cb_infertility","cb_pregnancy","patient_signed","approval_no","chief_complaint"]:
         if col not in new_df.columns:

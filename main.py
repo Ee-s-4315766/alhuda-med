@@ -153,10 +153,9 @@ def main():
         else:
             from app.notifications import get_unread_count
             unread = get_unread_count(user.get("doctor_id", ""))
-            notif_label = f"🔔 إشعاراتي ({unread})" if unread else "🔔 إشعاراتي"
             pages = {
                 "📋 لوحتي الشخصية":         "doctor",
-                notif_label:                 "notifications",
+                "🔔 إشعاراتي":               "notifications",
                 "📅 تقريري الشهري":         "monthly",
                 "📦 معالجة جماعية":         "bulk",
                 "🔍 محرك تحليل اليوكاف":    "ucaaf",
@@ -164,6 +163,13 @@ def main():
                 "🏥 شركات التأمين":         "insurance",
                 "✅ قائمة التحقق":          "checklist",
             }
+            if unread:
+                st.markdown(
+                    f'<div style="background:#ef4444;color:white;border-radius:8px;'
+                    f'padding:6px 12px;margin-bottom:8px;font-size:13px;text-align:center">'
+                    f'🔔 لديك {unread} إشعار جديد</div>',
+                    unsafe_allow_html=True,
+                )
 
         page = st.radio("القائمة", list(pages.keys()), label_visibility="collapsed")
         st.divider()

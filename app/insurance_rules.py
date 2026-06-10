@@ -7,22 +7,6 @@
 # Per-company configuration
 # ─────────────────────────────────────────────────────────────────────────────
 INSURANCE_COMPANIES = {
-    "MEDGULF": {
-        "name_ar":            "ميدغلف",
-        "approval_limit":     1000,    # SAR per visit before needing prior auth
-        "max_per_visit":      5000,
-        "copay_pct":          20,
-        "infertility_covered": True,
-        "infertility_age_limit": 45,
-        "chronic_requires_cb": True,
-        "requires_referral_for_specialist": True,
-        "excluded_icd": [],
-        "excluded_cpt": ["99397"],     # no preventive for 65+ in some plans
-        "extra_rules": [
-            "موافقة مسبقة لكل جراحة بغض النظر عن المبلغ",
-            "تقرير طبي مطلوب للإجراءات فوق 2000 ر.س",
-        ],
-    },
     "BUPA": {
         "name_ar":            "بوبا العربية",
         "approval_limit":     2000,
@@ -38,23 +22,6 @@ INSURANCE_COMPANIES = {
             "مركز الخصوبة معتمد مطلوب لحالات N97.x",
             "موافقة مسبقة للعمليات والمناظير",
             "تاريخ انتهاء الصلاحية يُتحقق تلقائياً",
-        ],
-    },
-    "TAWUNIYA": {
-        "name_ar":            "التعاونية",
-        "approval_limit":     1500,
-        "max_per_visit":      6000,
-        "copay_pct":          20,
-        "infertility_covered": False,   # not covered in standard plan
-        "infertility_age_limit": None,
-        "chronic_requires_cb": True,
-        "requires_referral_for_specialist": True,
-        "excluded_icd": ["N97.0","N97.1","N46","Z31.4"],  # infertility excluded
-        "excluded_cpt": ["58150","90837","90834"],
-        "extra_rules": [
-            "العقم غير مشمول في الخطة الأساسية — تحقق من الملحق",
-            "موافقة مسبقة لكل تحليل فوق 500 ر.س",
-            "الأمراض النفسية تشترط إحالة من طبيب الأسرة",
         ],
     },
     "AXA": {
