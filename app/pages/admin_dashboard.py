@@ -265,3 +265,65 @@ def render(df: pd.DataFrame, user: dict):
         )
         csv = view.to_csv(index=False).encode("utf-8-sig")
         st.download_button("⬇️ تصدير (CSV)", csv, "taqreer.csv", "text/csv")
+import io
+import pandas as pd
+import streamlit as st
+# استدعاء دالة التحليل الذكية المعتمدة في مشروعك
+from app.ucaaf_analyzer import analyze  
+
+st.markdown("---")
+st.header("📊 تصدير نموذج يوكاف (UCAAF) ومعالجة الأخطاء")
+
+# 1. جلب البيانات (تأكد أن متغير الحالات المسمى 'cases' أو الـ DataFrame متوفر في ملفك)
+# هنا نقوم بفحص وتجهيز الحالات للتصدير
+if 'cases' in locals() or 'cases' in globals() or 'st.session_state' in dir():
+    
+    # محاولة جلب الحالات من الـ session_state أو المتغيرات المحلية
+    all_cases = []
+    if 'cases' in locals(): all_cases = cases
+    elif 'cases' in globals(): all_cases = globals()['cases']
+    
+    if all_cases:
+        # تحويل الحالات عبر دالة ucaaf_analyzer لاستخراج الأخطاء بدقة
+        ucaaf_records = []
+        for c in all_cases:
+            # تشغيل الفحص التلقائي لكل حالة
+            analysis_result = analyze(c)
+            
+            # تجميع تفاصيل الخطأ والحل المقترح إن وجد
+            errors = ", ".join([e['msg'] for e in analysis_result.errors]) if analysis_result.errors else "سليمة ✅"
+            fixes = ", ".join([e['fix'] for e in analysis_result.errors]) if analysis_result.errors else "جاهزة للرفع"
+            
+            ucaaf_records.append({
+                "رقم المطالبة (Claim ID)": c.get("claim_id"),
+                "رقم المريض (Patient ID)": c.get("patient_id"),
+                "رمز التشخيص ICD": c.get("icd_code"),
+                "رمز الإجراء CPT": c.get("cpt_code"),
+                "المبلغ": c.get("amount"),
+                "حالة التوقيع": "موقع" if c.get("patient_signed") else "غير موقع",
+                "الأخطاء المكتشفة في يوكاف": errors,
+                "طريقة الإصلاح المقترحة": fixes,
+                "درجة الخطورة": analysis_result.severity if analysis_result.errors else "آمن"
+            })
+        
+        # تحويل التقرير النهائي إلى DataFrame
+        ucaaf_df = pd.DataFrame(ucaaf_records)
+        
+        # 2. إنشاء ملف Excel في الذاكرة لتنزيله فوراً دون حفظه على السيرفر
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            ucaaf_df.to_excel(writer, index=False, sheet_name='UCAAF_Errors_Report')
+        buffer.seek(0)
+        
+        # 3. إظهار خانة (زر) التحميل للمستخدم
+        st.download_button(
+            label="📥 تصدير تقرير أخطاء يوكاف المكتشفة (Excel)",
+            data=buffer,
+            file_name="UCAAF_Doctor_Claims_Errors.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        st.success("تم ربط الخانة بمحلل الأخطاء الذكي بنجاح. يمكنك تحميل الملف ومطابقته!")
+    else:
+        st.info("لا توجد حالات تأمين مسجلة حالياً لتصديرها.")
+else:
+    st.warning("يرجى مراجعة مخرجات جدول البيانات لربط زر التصدير بقاعدة بيانات الحالات الفعلية.")
