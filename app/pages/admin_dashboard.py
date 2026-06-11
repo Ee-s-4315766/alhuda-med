@@ -1,4 +1,5 @@
 """Admin & Audit Dashboard — full analytics with financial reporting."""
+from pathlib import Path
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -7,6 +8,19 @@ from app.components import (
     kpi_row, status_pie, error_bar_chart,
     doctor_comparison_bar, monthly_trend, alert_box,
 )
+
+CLAIMS_PATH = Path(__file__).parent.parent.parent / "data" / "claims.csv"
+
+
+def _delete_claims(claim_ids: list[str]) -> int:
+    """Remove claims by ID from the CSV. Returns count deleted."""
+    if not CLAIMS_PATH.exists():
+        return 0
+    full = pd.read_csv(CLAIMS_PATH)
+    before = len(full)
+    full = full[~full["claim_id"].astype(str).isin([str(c) for c in claim_ids])]
+    full.to_csv(CLAIMS_PATH, index=False, encoding="utf-8-sig")
+    return before - len(full)
 
 
 def _lost_revenue_chart(df: pd.DataFrame):
@@ -253,16 +267,87 @@ def render(df: pd.DataFrame, user: dict):
 
         cols = ["claim_id","patient_name","doctor_name","specialty","service_date",
                 "icd_code","cpt_code","amount","recovered","status","errors","error_count"]
-        st.dataframe(
-            view[cols].rename(columns={
-                "claim_id":"رقم المطالبة","patient_name":"المريض","doctor_name":"الطبيب",
-                "specialty":"التخصص","service_date":"تاريخ الخدمة","icd_code":"ICD",
-                "cpt_code":"CPT","amount":"المبلغ","recovered":"المسترد",
-                "status":"الحالة","errors":"الأخطاء","error_count":"عدد الأخطاء",
-            }),
-            use_container_width=True,
-            hide_index=True,
-        )
+
+        # ── Delete section (admin only) ───────────────────────────────
+        if user.get("role") == "admin":
+            st.markdown("#### تحديد المطالبات للحذف")
+            st.caption("ضع علامة ✓ بجانب المطالبات التي تريد حذفها، ثم اضغط زر الحذف.")
+
+            edit_df = view[cols].copy()
+            edit_df.insert(0, "حذف", False)
+            edited = st.data_editor(
+                edit_df.rename(columns={
+                    "claim_id":"رقم المطالبة","patient_name":"المريض","doctor_name":"الطبيب",
+                    "specialty":"التخصص","service_date":"تاريخ الخدمة","icd_code":"ICD",
+                    "cpt_code":"CPT","amount":"المبلغ","recovered":"المسترد",
+                    "status":"الحالة","errors":"الأخطاء","error_count":"عدد الأخطاء",
+                }),
+                column_config={
+                    "حذف": st.column_config.CheckboxColumn("🗑️ حذف", default=False),
+                },
+                disabled=[c for c in edit_df.rename(columns={
+                    "claim_id":"رقم المطالبة","patient_name":"المريض","doctor_name":"الطبيب",
+                    "specialty":"التخصص","service_date":"تاريخ الخدمة","icd_code":"ICD",
+                    "cpt_code":"CPT","amount":"المبلغ","recovered":"المسترد",
+                    "status":"الحالة","errors":"الأخطاء","error_count":"عدد الأخطاء",
+                }).columns if c != "حذف"],
+                use_container_width=True,
+                hide_index=True,
+                key="adm_delete_editor",
+            )
+
+            selected_mask = edited["حذف"] == True  # noqa: E712
+            selected_count = selected_mask.sum()
+
+            if selected_count > 0:
+                st.warning(f"تم تحديد **{selected_count}** مطالبة للحذف.")
+                # Use session state to require two-click confirmation
+                if "confirm_delete" not in st.session_state:
+                    st.session_state["confirm_delete"] = False
+
+                if not st.session_state["confirm_delete"]:
+                    if st.button("🗑️ حذف المحدد", type="primary", key="adm_del_btn"):
+                        st.session_state["confirm_delete"] = True
+                        st.rerun()
+                else:
+                    st.error("⚠️ هل أنت متأكد من حذف هذه المطالبات؟ لا يمكن التراجع عن هذا الإجراء.")
+                    c_yes, c_no = st.columns(2)
+                    with c_yes:
+                        if st.button("✅ نعم، احذف", type="primary", key="adm_del_confirm"):
+                            ids_to_delete = view.loc[view.index[selected_mask.values], "claim_id"].tolist()
+                            deleted = _delete_claims(ids_to_delete)
+                            st.session_state["confirm_delete"] = False
+                            st.cache_data.clear()
+                            st.success(f"تم حذف {deleted} مطالبة بنجاح.")
+                            st.rerun()
+                    with c_no:
+                        if st.button("❌ إلغاء", key="adm_del_cancel"):
+                            st.session_state["confirm_delete"] = False
+                            st.rerun()
+            else:
+                st.session_state["confirm_delete"] = False
+                st.dataframe(
+                    view[cols].rename(columns={
+                        "claim_id":"رقم المطالبة","patient_name":"المريض","doctor_name":"الطبيب",
+                        "specialty":"التخصص","service_date":"تاريخ الخدمة","icd_code":"ICD",
+                        "cpt_code":"CPT","amount":"المبلغ","recovered":"المسترد",
+                        "status":"الحالة","errors":"الأخطاء","error_count":"عدد الأخطاء",
+                    }),
+                    use_container_width=True,
+                    hide_index=True,
+                )
+        else:
+            st.dataframe(
+                view[cols].rename(columns={
+                    "claim_id":"رقم المطالبة","patient_name":"المريض","doctor_name":"الطبيب",
+                    "specialty":"التخصص","service_date":"تاريخ الخدمة","icd_code":"ICD",
+                    "cpt_code":"CPT","amount":"المبلغ","recovered":"المسترد",
+                    "status":"الحالة","errors":"الأخطاء","error_count":"عدد الأخطاء",
+                }),
+                use_container_width=True,
+                hide_index=True,
+            )
+
         csv = view.to_csv(index=False).encode("utf-8-sig")
         st.download_button("⬇️ تصدير (CSV)", csv, "taqreer.csv", "text/csv")
 import io
