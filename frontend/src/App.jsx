@@ -49,7 +49,7 @@ const CheckIcon = ({ size = 20 }) => (
   </svg>
 )
 const StarIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="#d4a017" stroke="#d4a017" strokeWidth="1">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="#f0b429" stroke="#f0b429" strokeWidth="1">
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
   </svg>
 )
@@ -78,18 +78,18 @@ const CarIllustration = ({ color = '#1a3a6b', type = 'sedan' }) => {
     <svg viewBox="0 0 200 100" width="160" height="80">
       <defs>
         <linearGradient id={`g1-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: color }} /><stop offset="100%" style={{ stopColor: '#0a0f1e' }} />
+          <stop offset="0%" style={{ stopColor: color }} /><stop offset="100%" style={{ stopColor: '#091747' }} />
         </linearGradient>
       </defs>
       <rect x="20" y="30" width="160" height="45" rx="8" fill={`url(#g1-${uid})`}/>
       <rect x="30" y="15" width="130" height="30" rx="6" fill={`url(#g1-${uid})`} opacity="0.8"/>
       <rect x="35" y="18" width="50" height="22" rx="4" fill="rgba(120,200,255,0.3)" stroke="rgba(120,200,255,0.5)" strokeWidth="1"/>
       <rect x="95" y="18" width="55" height="22" rx="4" fill="rgba(120,200,255,0.3)" stroke="rgba(120,200,255,0.5)" strokeWidth="1"/>
-      <circle cx="55" cy="78" r="14" fill="#0a0f1e" stroke="#d4a017" strokeWidth="2"/>
-      <circle cx="55" cy="78" r="8" fill="#1a2744"/>
-      <circle cx="145" cy="78" r="14" fill="#0a0f1e" stroke="#d4a017" strokeWidth="2"/>
-      <circle cx="145" cy="78" r="8" fill="#1a2744"/>
-      <rect x="20" y="42" width="12" height="8" rx="2" fill="#f0c040"/>
+      <circle cx="55" cy="78" r="14" fill="#091747" stroke="#f0b429" strokeWidth="2"/>
+      <circle cx="55" cy="78" r="8" fill="#0d2260"/>
+      <circle cx="145" cy="78" r="14" fill="#091747" stroke="#f0b429" strokeWidth="2"/>
+      <circle cx="145" cy="78" r="8" fill="#0d2260"/>
+      <rect x="20" y="42" width="12" height="8" rx="2" fill="#ffd04d"/>
       <rect x="168" y="42" width="12" height="8" rx="2" fill="rgba(255,50,50,0.8)"/>
     </svg>
   )
@@ -97,18 +97,18 @@ const CarIllustration = ({ color = '#1a3a6b', type = 'sedan' }) => {
     <svg viewBox="0 0 200 100" width="160" height="80">
       <defs>
         <linearGradient id={`g2-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: color }} /><stop offset="100%" style={{ stopColor: '#0a0f1e' }} />
+          <stop offset="0%" style={{ stopColor: color }} /><stop offset="100%" style={{ stopColor: '#091747' }} />
         </linearGradient>
       </defs>
       <rect x="25" y="40" width="150" height="38" rx="6" fill={`url(#g2-${uid})`}/>
       <path d="M60 40 Q80 20 120 20 Q150 20 160 40" fill={`url(#g2-${uid})`} opacity="0.8"/>
       <rect x="65" y="22" width="40" height="20" rx="4" fill="rgba(120,200,255,0.3)" stroke="rgba(120,200,255,0.5)" strokeWidth="1"/>
       <rect x="110" y="22" width="40" height="20" rx="4" fill="rgba(120,200,255,0.3)" stroke="rgba(120,200,255,0.5)" strokeWidth="1"/>
-      <circle cx="60" cy="78" r="13" fill="#0a0f1e" stroke="#d4a017" strokeWidth="2"/>
-      <circle cx="60" cy="78" r="7" fill="#1a2744"/>
-      <circle cx="140" cy="78" r="13" fill="#0a0f1e" stroke="#d4a017" strokeWidth="2"/>
-      <circle cx="140" cy="78" r="7" fill="#1a2744"/>
-      <rect x="25" y="48" width="10" height="7" rx="2" fill="#f0c040"/>
+      <circle cx="60" cy="78" r="13" fill="#091747" stroke="#f0b429" strokeWidth="2"/>
+      <circle cx="60" cy="78" r="7" fill="#0d2260"/>
+      <circle cx="140" cy="78" r="13" fill="#091747" stroke="#f0b429" strokeWidth="2"/>
+      <circle cx="140" cy="78" r="7" fill="#0d2260"/>
+      <rect x="25" y="48" width="10" height="7" rx="2" fill="#ffd04d"/>
       <rect x="165" y="48" width="10" height="7" rx="2" fill="rgba(255,50,50,0.8)"/>
     </svg>
   )
@@ -116,18 +116,18 @@ const CarIllustration = ({ color = '#1a3a6b', type = 'sedan' }) => {
     <svg viewBox="0 0 200 100" width="160" height="80">
       <defs>
         <linearGradient id={`g3-${uid}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{ stopColor: color }} /><stop offset="100%" style={{ stopColor: '#0a0f1e' }} />
+          <stop offset="0%" style={{ stopColor: color }} /><stop offset="100%" style={{ stopColor: '#091747' }} />
         </linearGradient>
       </defs>
       <rect x="15" y="38" width="170" height="40" rx="8" fill={`url(#g3-${uid})`}/>
       <path d="M50 38 Q75 18 125 18 Q155 18 165 38" fill={`url(#g3-${uid})`} opacity="0.85"/>
       <rect x="58" y="20" width="42" height="20" rx="3" fill="rgba(120,200,255,0.35)" stroke="rgba(120,200,255,0.6)" strokeWidth="1"/>
       <rect x="105" y="20" width="48" height="20" rx="3" fill="rgba(120,200,255,0.35)" stroke="rgba(120,200,255,0.6)" strokeWidth="1"/>
-      <circle cx="52" cy="78" r="14" fill="#0a0f1e" stroke="#d4a017" strokeWidth="2.5"/>
-      <circle cx="52" cy="78" r="8" fill="#1a2744"/>
-      <circle cx="148" cy="78" r="14" fill="#0a0f1e" stroke="#d4a017" strokeWidth="2.5"/>
-      <circle cx="148" cy="78" r="8" fill="#1a2744"/>
-      <rect x="15" y="46" width="14" height="9" rx="3" fill="#f0c040" opacity="0.9"/>
+      <circle cx="52" cy="78" r="14" fill="#091747" stroke="#f0b429" strokeWidth="2.5"/>
+      <circle cx="52" cy="78" r="8" fill="#0d2260"/>
+      <circle cx="148" cy="78" r="14" fill="#091747" stroke="#f0b429" strokeWidth="2.5"/>
+      <circle cx="148" cy="78" r="8" fill="#0d2260"/>
+      <rect x="15" y="46" width="14" height="9" rx="3" fill="#ffd04d" opacity="0.9"/>
       <rect x="171" y="46" width="14" height="9" rx="3" fill="rgba(255,50,50,0.9)"/>
     </svg>
   )
@@ -181,7 +181,7 @@ function PaymentStep({ total, carName, onConfirm, onBack, submitting }) {
 
   return (
     <div>
-      <p style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, margin: '0 0 20px' }}>
+      <p style={{ color: '#f0b429', fontSize: 13, fontWeight: 600, margin: '0 0 20px' }}>
         3️⃣ الدفع الإلكتروني
       </p>
 
@@ -193,7 +193,7 @@ function PaymentStep({ total, carName, onConfirm, onBack, submitting }) {
       }}>
         <div>
           <div style={{ color: '#9ca3af', fontSize: 12 }}>المبلغ الإجمالي</div>
-          <div style={{ color: '#d4a017', fontSize: 28, fontWeight: 900 }}>{total} <span style={{ fontSize: 14 }}>ر.س</span></div>
+          <div style={{ color: '#f0b429', fontSize: 28, fontWeight: 900 }}>{total} <span style={{ fontSize: 14 }}>ر.س</span></div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {['mada', 'VISA', 'MC', 'STC', ''].map((m, i) => (
@@ -292,7 +292,7 @@ function ConfigBanner() {
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       gap: 16, flexWrap: 'wrap',
     }}>
-      <span style={{ color: '#d4a017', fontSize: 13 }}>
+      <span style={{ color: '#f0b429', fontSize: 13 }}>
         ⚠️ وضع العرض التجريبي — أضف <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>VITE_SUPABASE_URL</code> و <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>VITE_SUPABASE_ANON_KEY</code> في ملف <code style={{ background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: 4, fontSize: 12 }}>.env</code> لتفعيل قاعدة البيانات
       </span>
       <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: 4 }}>
@@ -363,13 +363,13 @@ function HeroSection({ onSearch, setCurrentPage }) {
     <section className="hero-bg" style={{ minHeight: '88vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 24px' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', width: '100%', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-          <span style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.4)', color: '#d4a017', padding: '6px 20px', borderRadius: 20, fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>
+          <span style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.4)', color: '#f0b429', padding: '6px 20px', borderRadius: 20, fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>
             ✦ مكتب موكار لتأجير السيارات ✦
           </span>
         </div>
         <h1 style={{ textAlign: 'center', fontSize: 'clamp(36px, 6vw, 70px)', fontWeight: 900, lineHeight: 1.15, margin: '0 0 16px', color: '#fff' }}>
           تجربة قيادة{' '}
-          <span style={{ background: 'linear-gradient(135deg, #d4a017, #f0c040)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <span style={{ background: 'linear-gradient(135deg, #f0b429, #ffd04d)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             استثنائية
           </span>
         </h1>
@@ -385,21 +385,21 @@ function HeroSection({ onSearch, setCurrentPage }) {
           }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 24 }}>
               <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#d4a017', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#f0b429', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
                   <CalendarIcon size={13} /> تاريخ الاستلام
                 </label>
                 <input type="date" value={form.pickup} min={today} required
                   onChange={e => setForm(f => ({ ...f, pickup: e.target.value }))} />
               </div>
               <div>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#d4a017', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#f0b429', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
                   <CalendarIcon size={13} /> تاريخ التسليم
                 </label>
                 <input type="date" value={form.dropoff} min={form.pickup || today} required
                   onChange={e => setForm(f => ({ ...f, dropoff: e.target.value }))} />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#d4a017', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>نوع السيارة</label>
+                <label style={{ display: 'block', color: '#f0b429', fontSize: 13, fontWeight: 600, marginBottom: 8 }}>نوع السيارة</label>
                 <select value={form.carType} onChange={e => setForm(f => ({ ...f, carType: e.target.value }))}>
                   <option value="all">جميع الأنواع</option>
                   <option value="sedan">سيدان</option>
@@ -417,7 +417,7 @@ function HeroSection({ onSearch, setCurrentPage }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, maxWidth: 600, margin: '48px auto 0' }}>
           {[['15+', 'سيارة متاحة'], ['500+', 'عميل راضٍ'], ['8+', 'سنوات خبرة']].map(([v, l], i) => (
             <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, color: '#d4a017' }}>{v}</div>
+              <div style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, color: '#f0b429' }}>{v}</div>
               <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>{l}</div>
             </div>
           ))}
@@ -437,7 +437,7 @@ function CarGallery({ searchFilter, onBookCar, cars, loading }) {
   return (
     <section style={{ padding: '80px 24px', maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ textAlign: 'center', marginBottom: 48 }}>
-        <span style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, letterSpacing: 2 }}>أسطولنا</span>
+        <span style={{ color: '#f0b429', fontSize: 13, fontWeight: 600, letterSpacing: 2 }}>أسطولنا</span>
         <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 800, margin: '12px 0 16px', color: '#fff' }}>اختر سيارتك المثالية</h2>
         <p style={{ color: '#6b7280', fontSize: 16, maxWidth: 500, margin: '0 auto' }}>مجموعة متنوعة من أرقى السيارات لتلبية جميع احتياجاتك</p>
       </div>
@@ -470,7 +470,7 @@ function CarCard({ car, idx, onBook }) {
     <div className="car-card animate-fade-in" style={{ animationDelay: `${idx * 0.08}s` }}>
       {/* Car image area */}
       <div style={{
-        background: `linear-gradient(135deg, ${car.color}44 0%, #060d1f 100%)`,
+        background: `linear-gradient(135deg, ${car.color}44 0%, #0b1d54 100%)`,
         height: 200, position: 'relative', overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -483,7 +483,7 @@ function CarCard({ car, idx, onBook }) {
         <div style={{
           position: 'absolute', top: 12, left: 12,
           background: 'rgba(6,13,31,0.7)', border: '1px solid rgba(212,160,23,0.3)',
-          borderRadius: 6, padding: '3px 10px', fontSize: 11, color: '#d4a017', backdropFilter: 'blur(4px)',
+          borderRadius: 6, padding: '3px 10px', fontSize: 11, color: '#f0b429', backdropFilter: 'blur(4px)',
         }}>
           {car.type_label}
         </div>
@@ -498,7 +498,7 @@ function CarCard({ car, idx, onBook }) {
             <span style={{ fontSize: 12, color: '#6b7280' }}>{car.year} · {car.fuel} · {car.transmission}</span>
           </div>
           <div style={{ textAlign: 'left' }}>
-            <span style={{ fontSize: 22, fontWeight: 900, color: '#d4a017' }}>{car.price}</span>
+            <span style={{ fontSize: 22, fontWeight: 900, color: '#f0b429' }}>{car.price}</span>
             <span style={{ fontSize: 11, color: '#6b7280' }}> ر.س/يوم</span>
           </div>
         </div>
@@ -511,7 +511,7 @@ function CarCard({ car, idx, onBook }) {
           {(car.features || []).slice(0, 3).map((f, i) => (
             <span key={i} style={{
               fontSize: 11, padding: '3px 10px', borderRadius: 12,
-              background: 'rgba(212,160,23,0.08)', color: '#d4a017', border: '1px solid rgba(212,160,23,0.2)',
+              background: 'rgba(212,160,23,0.08)', color: '#f0b429', border: '1px solid rgba(212,160,23,0.2)',
             }}>{f}</span>
           ))}
         </div>
@@ -583,8 +583,8 @@ function BookingModal({ car, onClose, onConfirm }) {
             </div>
           ))}
           <div style={{ borderTop: '1px solid rgba(212,160,23,0.2)', paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#d4a017', fontWeight: 700 }}>الإجمالي</span>
-            <span style={{ color: '#d4a017', fontWeight: 900, fontSize: 24 }}>{total} ر.س</span>
+            <span style={{ color: '#f0b429', fontWeight: 700 }}>الإجمالي</span>
+            <span style={{ color: '#f0b429', fontWeight: 900, fontSize: 24 }}>{total} ر.س</span>
           </div>
         </div>
         {/* WhatsApp CTA */}
@@ -613,7 +613,7 @@ function BookingModal({ car, onClose, onConfirm }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>استمارة الحجز</h2>
-            <p style={{ margin: '4px 0 0', color: '#d4a017', fontSize: 13 }}>{car.name}</p>
+            <p style={{ margin: '4px 0 0', color: '#f0b429', fontSize: 13 }}>{car.name}</p>
           </div>
           <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#9ca3af' }}>
             <CloseIcon />
@@ -625,7 +625,7 @@ function BookingModal({ car, onClose, onConfirm }) {
           {[1, 2, 3].map(s => (
             <div key={s} style={{
               flex: 1, height: 4, borderRadius: 2,
-              background: step >= s ? 'linear-gradient(90deg, #d4a017, #f0c040)' : 'rgba(255,255,255,0.1)',
+              background: step >= s ? 'linear-gradient(90deg, #f0b429, #ffd04d)' : 'rgba(255,255,255,0.1)',
               transition: 'background 0.3s',
             }} />
           ))}
@@ -640,7 +640,7 @@ function BookingModal({ car, onClose, onConfirm }) {
         {/* Step 1: Customer info */}
         {step === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <p style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, margin: 0 }}>1️⃣ بيانات المستأجر</p>
+            <p style={{ color: '#f0b429', fontSize: 13, fontWeight: 600, margin: 0 }}>1️⃣ بيانات المستأجر</p>
             {[
               { label: 'الاسم الكامل *',         field: 'name',          type: 'text', ph: 'أحمد محمد السعيد' },
               { label: 'رقم الجوال *',           field: 'phone',         type: 'tel',  ph: '05XXXXXXXX' },
@@ -663,7 +663,7 @@ function BookingModal({ car, onClose, onConfirm }) {
         {/* Step 2: Dates + price summary */}
         {step === 2 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <p style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, margin: 0 }}>2️⃣ تفاصيل الحجز</p>
+            <p style={{ color: '#f0b429', fontSize: 13, fontWeight: 600, margin: 0 }}>2️⃣ تفاصيل الحجز</p>
             <div>
               <label style={{ display: 'block', color: '#9ca3af', fontSize: 12, marginBottom: 6 }}>تاريخ الاستلام *</label>
               <input type="date" value={form.pickup} min={today} required onChange={set('pickup')} />
@@ -681,8 +681,8 @@ function BookingModal({ car, onClose, onConfirm }) {
                   </div>
                 ))}
                 <div style={{ borderTop: '1px solid rgba(212,160,23,0.2)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#d4a017', fontWeight: 700 }}>الإجمالي</span>
-                  <span style={{ color: '#d4a017', fontWeight: 900, fontSize: 24 }}>{total} <span style={{ fontSize: 13 }}>ر.س</span></span>
+                  <span style={{ color: '#f0b429', fontWeight: 700 }}>الإجمالي</span>
+                  <span style={{ color: '#f0b429', fontWeight: 900, fontSize: 24 }}>{total} <span style={{ fontSize: 13 }}>ر.س</span></span>
                 </div>
               </div>
             )}
@@ -739,21 +739,21 @@ function AdminLogin({ onLogin }) {
   return (
     <section style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{
-        background: 'linear-gradient(135deg, #0d1f3c 0%, #060d1f 100%)',
+        background: 'linear-gradient(135deg, #0d2260 0%, #0b1d54 100%)',
         border: '1px solid rgba(212,160,23,0.3)',
         borderRadius: 20, padding: 40, width: '100%', maxWidth: 420,
         boxShadow: '0 24px 80px rgba(0,0,0,0.5), 0 0 40px rgba(212,160,23,0.08)',
       }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 56, height: 56, background: 'linear-gradient(135deg, #d4a017, #f0c040)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <CarIcon size={26} color="#060d1f" />
+          <div style={{ width: 56, height: 56, background: 'linear-gradient(135deg, #f0b429, #ffd04d)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <CarIcon size={26} color="#0b1d54" />
           </div>
           <h2 style={{ color: '#fff', fontWeight: 800, fontSize: 22, margin: '0 0 6px' }}>دخول المكتب</h2>
           <p style={{ color: '#6b7280', fontSize: 13 }}>لوحة تحكم مكتب موكار · مشغّلة بـ Supabase Auth</p>
         </div>
 
         {!isConfigured && (
-          <div style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, color: '#d4a017', fontSize: 12 }}>
+          <div style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 20, color: '#f0b429', fontSize: 12 }}>
             ⚠️ Supabase غير مُهيَّأ. سيتم فتح لوحة التحكم في وضع العرض التجريبي.
           </div>
         )}
@@ -841,8 +841,8 @@ function Dashboard({ session, bookings, cars, onSignOut, onRefresh, loading }) {
           <button key={id} onClick={() => setActiveTab(id)} style={{
             padding: '9px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13,
             fontWeight: activeTab === id ? 700 : 400,
-            background: activeTab === id ? 'linear-gradient(135deg, #d4a017, #f0c040)' : 'transparent',
-            color: activeTab === id ? '#060d1f' : '#9ca3af', transition: 'all 0.3s',
+            background: activeTab === id ? 'linear-gradient(135deg, #f0b429, #ffd04d)' : 'transparent',
+            color: activeTab === id ? '#0b1d54' : '#9ca3af', transition: 'all 0.3s',
           }}>{label}</button>
         ))}
       </div>
@@ -857,7 +857,7 @@ function Dashboard({ session, bookings, cars, onSignOut, onRefresh, loading }) {
               ['✅', 'متاحة',           stats.availableCars, '#4ade80'],
               ['⏳', 'طلبات معلقة',     stats.pendingCount,  '#fbbf24'],
               ['📋', 'إجمالي الطلبات',  stats.totalBookings, '#a78bfa'],
-              ['💰', 'إجمالي الإيرادات', `${stats.totalRevenue.toLocaleString()} ر.س`, '#d4a017'],
+              ['💰', 'إجمالي الإيرادات', `${stats.totalRevenue.toLocaleString()} ر.س`, '#f0b429'],
             ].map(([icon, label, value, color]) => (
               <div key={label} className="stat-card">
                 <div style={{ fontSize: 28, marginBottom: 10 }}>{icon}</div>
@@ -899,7 +899,7 @@ function Dashboard({ session, bookings, cars, onSignOut, onRefresh, loading }) {
                 <div style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{car.name}</div>
                 <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 8 }}>{car.type_label} · {car.year}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: '#d4a017', fontWeight: 700, fontSize: 13 }}>{car.price} ر.س/يوم</span>
+                  <span style={{ color: '#f0b429', fontWeight: 700, fontSize: 13 }}>{car.price} ر.س/يوم</span>
                   <span className={car.available ? 'badge-available' : 'badge-rented'}>
                     {car.available ? 'متاحة' : 'مؤجرة'}
                   </span>
@@ -934,7 +934,7 @@ function BookingsTable({ bookings, statusMap, title, showAll = false }) {
             <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>{b.car_name} · {b.customer_phone}</div>
           </div>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-            <span style={{ fontWeight: 700, color: '#d4a017', fontSize: 15 }}>{(b.total || 0).toLocaleString()} ر.س</span>
+            <span style={{ fontWeight: 700, color: '#f0b429', fontSize: 15 }}>{(b.total || 0).toLocaleString()} ر.س</span>
             <span style={{
               padding: '4px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600,
               background: statusMap[b.status]?.bg, color: statusMap[b.status]?.color,
@@ -954,7 +954,7 @@ function BookingsTable({ bookings, statusMap, title, showAll = false }) {
 function AboutPage() {
   return (
     <section style={{ padding: '80px 24px', maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
-      <span style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, letterSpacing: 2 }}>من نحن</span>
+      <span style={{ color: '#f0b429', fontSize: 13, fontWeight: 600, letterSpacing: 2 }}>من نحن</span>
       <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '16px 0 20px', color: '#fff' }}>مكتب موكار لتأجير السيارات</h2>
       <p style={{ color: '#9ca3af', fontSize: 16, lineHeight: 1.8, marginBottom: 48 }}>
         نخدم عملاءنا منذ أكثر من 8 سنوات بأعلى معايير الجودة. أسطولنا يضم أحدث الموديلات مع تأمين شامل وخدمة على مدار الساعة.
@@ -981,14 +981,14 @@ function ContactPage() {
   return (
     <section style={{ padding: '80px 24px', maxWidth: 700, margin: '0 auto' }}>
       <div style={{ textAlign: 'center', marginBottom: 48 }}>
-        <span style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, letterSpacing: 2 }}>تواصل معنا</span>
+        <span style={{ color: '#f0b429', fontSize: 13, fontWeight: 600, letterSpacing: 2 }}>تواصل معنا</span>
         <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '16px 0 16px', color: '#fff' }}>نحن هنا لمساعدتك</h2>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 36 }}>
         {[['📞', 'الهاتف', '0501234567'], ['💬', 'واتساب', '0501234567'], ['📍', 'الموقع', 'الرياض، حي العليا']].map(([icon, l, v]) => (
           <div key={l} className="glass-card" style={{ borderRadius: 14, padding: 20, textAlign: 'center' }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
-            <div style={{ color: '#d4a017', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{l}</div>
+            <div style={{ color: '#f0b429', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{l}</div>
             <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{v}</div>
           </div>
         ))}
@@ -1035,15 +1035,15 @@ function Footer({ setCurrentPage }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 40, marginBottom: 40 }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #d4a017, #f0c040)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CarIcon size={17} color="#060d1f" />
+              <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #f0b429, #ffd04d)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CarIcon size={17} color="#0b1d54" />
               </div>
               <span style={{ fontWeight: 800, color: '#fff', fontSize: 15 }}>مكتب موكار</span>
             </div>
             <p style={{ color: '#6b7280', fontSize: 13, lineHeight: 1.7 }}>أفضل تجربة تأجير سيارات بأعلى معايير الجودة.</p>
           </div>
           <div>
-            <h4 style={{ color: '#d4a017', fontSize: 13, fontWeight: 700, marginBottom: 14 }}>روابط سريعة</h4>
+            <h4 style={{ color: '#f0b429', fontSize: 13, fontWeight: 700, marginBottom: 14 }}>روابط سريعة</h4>
             {[['الرئيسية', 'home'], ['معرض السيارات', 'cars'], ['عن المكتب', 'about'], ['تواصل معنا', 'contact']].map(([l, id]) => (
               <div key={id} style={{ marginBottom: 8 }}>
                 <span className="nav-link" style={{ fontSize: 13 }} onClick={() => setCurrentPage(id)}>{l}</span>
@@ -1051,7 +1051,7 @@ function Footer({ setCurrentPage }) {
             ))}
           </div>
           <div>
-            <h4 style={{ color: '#d4a017', fontSize: 13, fontWeight: 700, marginBottom: 14 }}>تواصل معنا</h4>
+            <h4 style={{ color: '#f0b429', fontSize: 13, fontWeight: 700, marginBottom: 14 }}>تواصل معنا</h4>
             <div style={{ color: '#9ca3af', fontSize: 13, lineHeight: 2.2 }}>
               <div>📞 0501234567</div>
               <div>💬 واتساب: 0501234567</div>
@@ -1154,7 +1154,7 @@ export default function App() {
   const pendingCount = bookings.filter(b => b.status === 'pending').length
 
   return (
-    <div style={{ minHeight: '100vh', background: '#060d1f' }}>
+    <div style={{ minHeight: '100vh', background: '#0b1d54' }}>
       {!isConfigured && <ConfigBanner />}
       <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} pendingCount={pendingCount} session={session} />
 
@@ -1171,7 +1171,7 @@ export default function App() {
       {currentPage === 'contact' && <ContactPage />}
       {currentPage === 'dashboard' && (
         !authChecked ? (
-          <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#d4a017' }}>جاري التحقق...</div>
+          <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f0b429' }}>جاري التحقق...</div>
         ) : (!isConfigured || session) ? (
           <Dashboard
             session={session}
