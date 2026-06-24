@@ -977,7 +977,7 @@ function ContactPage() {
         <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '16px 0 16px', color: '#fff' }}>نحن هنا لمساعدتك</h2>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 36 }}>
-        {[['📞', 'الهاتف', '—', null], ['💬', 'واتساب', '—', null], ['📍', 'الموقع', 'اضغط للخريطة', 'https://maps.app.goo.gl/ed6H9AzUU1kzJ6eP7']].map(([icon, l, v, href]) => (
+        {[['📞', 'الهاتف', '—', null], ['💬', 'واتساب', '—', null], ['📍', 'الموقع', 'اضغط للخريطة', 'https://maps.app.goo.gl/ww8eN5bpSr61xTo56']].map(([icon, l, v, href]) => (
           <div key={l} className="glass-card" style={{ borderRadius: 14, padding: 20, textAlign: 'center', cursor: href ? 'pointer' : 'default' }}
             onClick={() => href && window.open(href, '_blank')}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
@@ -1048,7 +1048,7 @@ function Footer({ setCurrentPage }) {
             <div style={{ color: '#9ca3af', fontSize: 13, lineHeight: 2.2 }}>
               <div>📞 —</div>
               <div>💬 واتساب: —</div>
-              <div style={{ cursor: 'pointer' }} onClick={() => window.open('https://maps.app.goo.gl/ed6H9AzUU1kzJ6eP7', '_blank')}>📍 موقعنا على الخريطة</div>
+              <div style={{ cursor: 'pointer' }} onClick={() => window.open('https://maps.app.goo.gl/ww8eN5bpSr61xTo56', '_blank')}>📍 موقعنا على الخريطة</div>
               <div>🕐 8 ص – 10 م</div>
             </div>
           </div>
