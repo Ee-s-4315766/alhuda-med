@@ -977,7 +977,7 @@ function ContactPage() {
         <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '16px 0 16px', color: '#fff' }}>نحن هنا لمساعدتك</h2>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 36 }}>
-        {[['📞', 'الهاتف', '0501234567'], ['💬', 'واتساب', '0501234567'], ['📍', 'الموقع', 'الرياض، حي العليا']].map(([icon, l, v]) => (
+        {[['📞', 'الهاتف', '—'], ['💬', 'واتساب', '—'], ['📍', 'الموقع', '—']].map(([icon, l, v]) => (
           <div key={l} className="glass-card" style={{ borderRadius: 14, padding: 20, textAlign: 'center' }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
             <div style={{ color: '#f0b429', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{l}</div>
@@ -1045,9 +1045,9 @@ function Footer({ setCurrentPage }) {
           <div>
             <h4 style={{ color: '#f0b429', fontSize: 13, fontWeight: 700, marginBottom: 14 }}>تواصل معنا</h4>
             <div style={{ color: '#9ca3af', fontSize: 13, lineHeight: 2.2 }}>
-              <div>📞 0501234567</div>
-              <div>💬 واتساب: 0501234567</div>
-              <div>📍 الرياض، حي العليا</div>
+              <div>📞 —</div>
+              <div>💬 واتساب: —</div>
+              <div>📍 —</div>
               <div>🕐 8 ص – 10 م</div>
             </div>
           </div>
