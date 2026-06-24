@@ -19,7 +19,7 @@ serve(async (req) => {
 
     // Message to office owner
     const officeMsg = `
-🚗 *حجز جديد — مكتب الهدى*
+🚗 *حجز جديد — مكتب موكار*
 
 👤 العميل: ${booking.customer_name}
 📞 الجوال: ${booking.customer_phone}
@@ -33,10 +33,10 @@ serve(async (req) => {
 
     // Confirmation message to customer
     const customerMsg = `
-✅ *تم تأكيد حجزك — مكتب الهدى*
+✅ *تم تأكيد حجزك — مكتب موكار*
 
 مرحباً ${booking.customer_name}،
-شكراً لاختيارك مكتب الهدى لتأجير السيارات 🌟
+شكراً لاختيارك مكتب موكار لتأجير السيارات 🌟
 
 🚙 السيارة: ${booking.car_name}
 📅 الاستلام: ${booking.pickup_date}
