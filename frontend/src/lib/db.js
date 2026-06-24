@@ -100,6 +100,20 @@ export function onAuthChange(callback) {
   return () => subscription.unsubscribe()
 }
 
+// ── WhatsApp notification (via Supabase Edge Function) ────────
+
+export async function notifyWhatsApp(booking) {
+  try {
+    const { error } = await supabase.functions.invoke('send-whatsapp', {
+      body: { booking },
+    })
+    if (error) console.warn('WhatsApp notification failed:', error.message)
+  } catch (err) {
+    console.warn('WhatsApp notification error:', err.message)
+    // Never block booking on notification failure
+  }
+}
+
 // ── Dashboard stats ───────────────────────────────────────────
 
 export async function fetchDashboardStats() {

@@ -2,20 +2,20 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, isConfigured } from './lib/supabase'
 import {
   fetchCars, fetchBookings, createBooking,
-  fetchDashboardStats, updateBookingStatus,
   subscribeToBookings, signIn, signOut, onAuthChange,
+  notifyWhatsApp,
 } from './lib/db'
 import './index.css'
 
 // ─── Static fallback data (demo mode when Supabase not configured) ────────────
 
 const DEMO_CARS = [
-  { id: '1', name: 'تويوتا كامري',     type: 'sedan',   type_label: 'سيدان',     price: 150, seats: 5, year: 2024, fuel: 'بنزين', transmission: 'أوتوماتيك', available: true,  color: '#1a3a6b', features: ['بلوتوث', 'كاميرا خلفية', 'تحكم بالمحرك'] },
-  { id: '2', name: 'BMW الفئة الخامسة',type: 'sedan',   type_label: 'سيدان',     price: 380, seats: 5, year: 2024, fuel: 'بنزين', transmission: 'أوتوماتيك', available: true,  color: '#2a1a4a', features: ['شاشة لمس', 'تحكم بالصوت', 'مقاعد جلد', 'نظام ملاحة'] },
-  { id: '3', name: 'هيونداي توسان',    type: 'suv',     type_label: 'دفع رباعي', price: 200, seats: 5, year: 2023, fuel: 'بنزين', transmission: 'أوتوماتيك', available: true,  color: '#1a4a2a', features: ['دفع رباعي', 'فتحة سقف', 'كاميرا 360'] },
-  { id: '4', name: 'تويوتا لاند كروزر',type: 'suv',    type_label: 'دفع رباعي', price: 550, seats: 7, year: 2024, fuel: 'ديزل',  transmission: 'أوتوماتيك', available: false, color: '#3a1a1a', features: ['7 مقاعد', 'دفع رباعي', 'شاشة 12"', 'مقاعد مدفأة'] },
-  { id: '5', name: 'كيا بيكانتو',      type: 'economy', type_label: 'اقتصادية',  price: 80,  seats: 5, year: 2023, fuel: 'بنزين', transmission: 'أوتوماتيك', available: true,  color: '#1a3a3a', features: ['اقتصادي بالوقود', 'سهل القيادة', 'موقف سهل'] },
-  { id: '6', name: 'هيونداي إيلانترا', type: 'economy', type_label: 'اقتصادية',  price: 110, seats: 5, year: 2024, fuel: 'بنزين', transmission: 'أوتوماتيك', available: true,  color: '#1a2a4a', features: ['بلوتوث', 'شاشة لمس', 'USB'] },
+  { id: '1', name: 'تويوتا كامري',      type: 'sedan',   type_label: 'سيدان',     price: 150, seats: 5, year: 2024, fuel: 'بنزين', transmission: 'أوتوماتيك', available: true,  color: '#1a3a6b', features: ['بلوتوث', 'كاميرا خلفية', 'تحكم بالمحرك'],   image_url: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb' },
+  { id: '2', name: 'BMW الفئة الخامسة', type: 'sedan',   type_label: 'سيدان',     price: 380, seats: 5, year: 2024, fuel: 'بنزين', transmission: 'أوتوماتيك', available: true,  color: '#2a1a4a', features: ['شاشة لمس', 'تحكم بالصوت', 'مقاعد جلد', 'نظام ملاحة'], image_url: 'https://images.unsplash.com/photo-1555215695-3004980ad54e' },
+  { id: '3', name: 'هيونداي توسان',     type: 'suv',     type_label: 'دفع رباعي', price: 200, seats: 5, year: 2023, fuel: 'بنزين', transmission: 'أوتوماتيك', available: true,  color: '#1a4a2a', features: ['دفع رباعي', 'فتحة سقف', 'كاميرا 360'],         image_url: 'https://images.unsplash.com/photo-1625047509252-ab38fb5c7343' },
+  { id: '4', name: 'تويوتا لاند كروزر', type: 'suv',    type_label: 'دفع رباعي', price: 550, seats: 7, year: 2024, fuel: 'ديزل',  transmission: 'أوتوماتيك', available: false, color: '#3a1a1a', features: ['7 مقاعد', 'دفع رباعي', 'شاشة 12"', 'مقاعد مدفأة'], image_url: 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b' },
+  { id: '5', name: 'كيا بيكانتو',       type: 'economy', type_label: 'اقتصادية',  price: 80,  seats: 5, year: 2023, fuel: 'بنزين', transmission: 'أوتوماتيك', available: true,  color: '#1a3a3a', features: ['اقتصادي بالوقود', 'سهل القيادة', 'موقف سهل'],  image_url: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d' },
+  { id: '6', name: 'هيونداي إيلانترا',  type: 'economy', type_label: 'اقتصادية',  price: 110, seats: 5, year: 2024, fuel: 'بنزين', transmission: 'أوتوماتيك', available: true,  color: '#1a2a4a', features: ['بلوتوث', 'شاشة لمس', 'USB'],                    image_url: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8' },
 ]
 
 const DEMO_BOOKINGS = [
@@ -130,6 +130,120 @@ const CarIllustration = ({ color = '#1a3a6b', type = 'sedan' }) => {
       <rect x="15" y="46" width="14" height="9" rx="3" fill="#f0c040" opacity="0.9"/>
       <rect x="171" y="46" width="14" height="9" rx="3" fill="rgba(255,50,50,0.9)"/>
     </svg>
+  )
+}
+
+// ─── Car Image (real photo with SVG fallback) ─────────────────────────────────
+
+function CarImage({ car }) {
+  const [errored, setErrored] = useState(false)
+  if (!car.image_url || errored) {
+    return <CarIllustration color={car.color} type={car.type} />
+  }
+  return (
+    <img
+      src={`${car.image_url}?auto=format&fit=crop&w=500&q=80`}
+      alt={car.name}
+      onError={() => setErrored(true)}
+      style={{
+        width: '100%', height: '100%',
+        objectFit: 'cover', borderRadius: 8,
+        transition: 'transform 0.4s ease',
+      }}
+    />
+  )
+}
+
+// ─── Moyasar Payment Step ─────────────────────────────────────────────────────
+
+function PaymentStep({ total, carName, onConfirm, onBack, submitting }) {
+  const containerRef = useRef(null)
+  const moyasarKey = import.meta.env.VITE_MOYASAR_KEY
+  const hasMoyasar = Boolean(moyasarKey) && Boolean(window.Moyasar)
+
+  useEffect(() => {
+    if (!hasMoyasar || !containerRef.current) return
+    containerRef.current.innerHTML = ''
+    window.Moyasar.init({
+      element: containerRef.current,
+      amount: total * 100,
+      currency: 'SAR',
+      description: `حجز ${carName} — مكتب الهدى`,
+      publishable_api_key: moyasarKey,
+      callback_url: window.location.href,
+      methods: ['creditcard', 'applepay', 'stcpay'],
+      on_completed: (payment) => {
+        if (payment.status === 'paid') onConfirm({ payment })
+      },
+    })
+    return () => { if (containerRef.current) containerRef.current.innerHTML = '' }
+  }, [total, carName, hasMoyasar, moyasarKey])
+
+  return (
+    <div>
+      <p style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, margin: '0 0 20px' }}>
+        3️⃣ الدفع الإلكتروني
+      </p>
+
+      {/* Price summary */}
+      <div style={{
+        background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.2)',
+        borderRadius: 12, padding: 16, marginBottom: 20, display: 'flex',
+        justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <div>
+          <div style={{ color: '#9ca3af', fontSize: 12 }}>المبلغ الإجمالي</div>
+          <div style={{ color: '#d4a017', fontSize: 28, fontWeight: 900 }}>{total} <span style={{ fontSize: 14 }}>ر.س</span></div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {['mada', 'VISA', 'MC', 'STC', ''].map((m, i) => (
+            i < 4 ? (
+              <span key={i} style={{
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 6, padding: '4px 10px', fontSize: 11, color: '#9ca3af', fontWeight: 700,
+              }}>{m}</span>
+            ) : null
+          ))}
+        </div>
+      </div>
+
+      {hasMoyasar ? (
+        <div ref={containerRef} style={{ minHeight: 200 }} />
+      ) : (
+        <div style={{ marginBottom: 20 }}>
+          {!moyasarKey ? (
+            <div style={{
+              background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)',
+              borderRadius: 10, padding: '12px 16px', color: '#fbbf24', fontSize: 13, marginBottom: 16,
+              lineHeight: 1.6,
+            }}>
+              ⚠️ وضع تجريبي — لتفعيل بوابة الدفع الحقيقية أضف<br/>
+              <code style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>VITE_MOYASAR_KEY</code> في ملف <code style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 6px', borderRadius: 4, fontSize: 11 }}>.env</code>
+            </div>
+          ) : (
+            <div style={{ color: '#9ca3af', fontSize: 13, marginBottom: 16, textAlign: 'center' }}>
+              ⏳ جاري تحميل بوابة الدفع...
+            </div>
+          )}
+          <button
+            className="gold-btn"
+            style={{ width: '100%', padding: '13px', borderRadius: 10, fontSize: 15, opacity: submitting ? 0.7 : 1 }}
+            disabled={submitting}
+            onClick={() => onConfirm({ payment: { status: 'demo' } })}
+          >
+            {submitting ? '⏳ جاري الحفظ...' : '✅ تأكيد الحجز (تجريبي)'}
+          </button>
+        </div>
+      )}
+
+      <button onClick={onBack} style={{
+        width: '100%', padding: '10px', borderRadius: 10, fontSize: 13, marginTop: 8,
+        background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)',
+        color: '#9ca3af', cursor: 'pointer',
+      }}>
+        → رجوع
+      </button>
+    </div>
   )
 }
 
@@ -363,25 +477,26 @@ function CarGallery({ searchFilter, onBookCar, cars, loading }) {
 function CarCard({ car, idx, onBook }) {
   return (
     <div className="car-card animate-fade-in" style={{ animationDelay: `${idx * 0.08}s` }}>
+      {/* Car image area */}
       <div style={{
-        background: `linear-gradient(135deg, ${car.color}33 0%, #060d1f 100%)`,
-        padding: '28px 20px 16px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative',
+        background: `linear-gradient(135deg, ${car.color}44 0%, #060d1f 100%)`,
+        height: 200, position: 'relative', overflow: 'hidden',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <div style={{ position: 'absolute', top: 16, right: 16 }}>
+        <CarImage car={car} />
+        <div style={{ position: 'absolute', top: 12, right: 12 }}>
           <span className={car.available ? 'badge-available' : 'badge-rented'}>
             {car.available ? '● متاحة' : '● مؤجرة'}
           </span>
         </div>
         <div style={{
-          position: 'absolute', top: 16, left: 16,
-          background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.3)',
-          borderRadius: 6, padding: '2px 10px', fontSize: 11, color: '#d4a017',
+          position: 'absolute', top: 12, left: 12,
+          background: 'rgba(6,13,31,0.7)', border: '1px solid rgba(212,160,23,0.3)',
+          borderRadius: 6, padding: '3px 10px', fontSize: 11, color: '#d4a017', backdropFilter: 'blur(4px)',
         }}>
           {car.type_label}
         </div>
-        <CarIllustration color={car.color} type={car.type} />
-        <div style={{ display: 'flex', gap: 2, marginTop: 8 }}>
+        <div style={{ position: 'absolute', bottom: 8, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 2 }}>
           {[1,2,3,4,5].map(s => <StarIcon key={s} />)}
         </div>
       </div>
@@ -436,11 +551,9 @@ function BookingModal({ car, onClose, onConfirm }) {
     ? Math.max(1, Math.ceil((new Date(form.dropoff) - new Date(form.pickup)) / 86400000))
     : 1
   const total = car.price * days
-
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }))
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
+  const handlePaymentConfirm = async ({ payment }) => {
     setSubmitting(true)
     setError('')
     try {
@@ -450,6 +563,8 @@ function BookingModal({ car, onClose, onConfirm }) {
         idNumber: form.idNumber, licenseNumber: form.licenseNumber,
         pickup: form.pickup, dropoff: form.dropoff,
         days, pricePerDay: car.price, total,
+        paymentId: payment?.id || 'demo',
+        paymentStatus: payment?.status || 'demo',
       })
       setSubmitted(true)
     } catch (err) {
@@ -467,7 +582,7 @@ function BookingModal({ car, onClose, onConfirm }) {
         </div>
         <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 800, marginBottom: 8 }}>تم الحجز بنجاح! 🎉</h2>
         <p style={{ color: '#9ca3af', lineHeight: 1.7, marginBottom: 24 }}>
-          {isConfigured ? 'تم حفظ حجزك في قاعدة البيانات. سيتصل بك فريقنا خلال دقائق.' : 'سيتصل بك فريقنا قريباً لتأكيد الحجز وترتيب الاستلام.'}
+          تم حفظ حجزك وسيصلك تأكيد على واتساب خلال دقائق.
         </p>
         <div style={{ background: 'rgba(212,160,23,0.08)', border: '1px solid rgba(212,160,23,0.2)', borderRadius: 12, padding: 20, marginBottom: 24 }}>
           {[['السيارة', car.name], ['الاستلام', form.pickup], ['التسليم', form.dropoff], ['عدد الأيام', `${days} يوم`]].map(([l, v]) => (
@@ -481,7 +596,22 @@ function BookingModal({ car, onClose, onConfirm }) {
             <span style={{ color: '#d4a017', fontWeight: 900, fontSize: 24 }}>{total} ر.س</span>
           </div>
         </div>
-        <button className="gold-btn" style={{ padding: '12px 32px', borderRadius: 10, fontSize: 15 }} onClick={onClose}>حسناً، شكراً!</button>
+        {/* WhatsApp CTA */}
+        <a
+          href={`https://wa.me/966501234567?text=${encodeURIComponent(`مرحباً، أريد تأكيد حجزي لـ ${car.name} من ${form.pickup} إلى ${form.dropoff}`)}`}
+          target="_blank" rel="noopener noreferrer"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.3)',
+            borderRadius: 10, padding: '12px 20px', color: '#25d366',
+            textDecoration: 'none', fontWeight: 600, fontSize: 14, marginBottom: 12,
+          }}
+        >
+          💬 تواصل معنا على واتساب
+        </a>
+        <button className="gold-btn" style={{ width: '100%', padding: '12px', borderRadius: 10, fontSize: 15 }} onClick={onClose}>
+          حسناً، شكراً!
+        </button>
       </div>
     </div>
   )
@@ -489,7 +619,7 @@ function BookingModal({ car, onClose, onConfirm }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff' }}>استمارة الحجز</h2>
             <p style={{ margin: '4px 0 0', color: '#d4a017', fontSize: 13 }}>{car.name}</p>
@@ -499,9 +629,14 @@ function BookingModal({ car, onClose, onConfirm }) {
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, marginBottom: 28 }}>
-          {[1, 2].map(s => (
-            <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: step >= s ? 'linear-gradient(90deg, #d4a017, #f0c040)' : 'rgba(255,255,255,0.1)', transition: 'background 0.3s' }} />
+        {/* Progress bar — 3 steps */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 24 }}>
+          {[1, 2, 3].map(s => (
+            <div key={s} style={{
+              flex: 1, height: 4, borderRadius: 2,
+              background: step >= s ? 'linear-gradient(90deg, #d4a017, #f0c040)' : 'rgba(255,255,255,0.1)',
+              transition: 'background 0.3s',
+            }} />
           ))}
         </div>
 
@@ -511,66 +646,79 @@ function BookingModal({ car, onClose, onConfirm }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          {step === 1 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <p style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, margin: 0 }}>1️⃣ بيانات المستأجر</p>
-              {[
-                { label: 'الاسم الكامل *',          field: 'name',          type: 'text', ph: 'أحمد محمد السعيد' },
-                { label: 'رقم الجوال *',            field: 'phone',         type: 'tel',  ph: '05XXXXXXXX' },
-                { label: 'رقم الهوية / الإقامة *',  field: 'idNumber',      type: 'text', ph: 'XXXXXXXXXX' },
-                { label: 'رقم رخصة القيادة *',      field: 'licenseNumber', type: 'text', ph: 'XXXXXXXXX' },
-              ].map(({ label, field, type, ph }) => (
-                <div key={field}>
-                  <label style={{ display: 'block', color: '#9ca3af', fontSize: 12, marginBottom: 6 }}>{label}</label>
-                  <input type={type} placeholder={ph} value={form[field]} onChange={set(field)} required />
+        {/* Step 1: Customer info */}
+        {step === 1 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <p style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, margin: 0 }}>1️⃣ بيانات المستأجر</p>
+            {[
+              { label: 'الاسم الكامل *',         field: 'name',          type: 'text', ph: 'أحمد محمد السعيد' },
+              { label: 'رقم الجوال *',           field: 'phone',         type: 'tel',  ph: '05XXXXXXXX' },
+              { label: 'رقم الهوية / الإقامة *', field: 'idNumber',      type: 'text', ph: 'XXXXXXXXXX' },
+              { label: 'رقم رخصة القيادة *',     field: 'licenseNumber', type: 'text', ph: 'XXXXXXXXX' },
+            ].map(({ label, field, type, ph }) => (
+              <div key={field}>
+                <label style={{ display: 'block', color: '#9ca3af', fontSize: 12, marginBottom: 6 }}>{label}</label>
+                <input type={type} placeholder={ph} value={form[field]} onChange={set(field)} required />
+              </div>
+            ))}
+            <button type="button" className="gold-btn"
+              style={{ padding: '13px', borderRadius: 10, fontSize: 15, marginTop: 8 }}
+              onClick={() => { if (form.name && form.phone && form.idNumber && form.licenseNumber) setStep(2) }}>
+              التالي: تحديد التواريخ ←
+            </button>
+          </div>
+        )}
+
+        {/* Step 2: Dates + price summary */}
+        {step === 2 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <p style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, margin: 0 }}>2️⃣ تفاصيل الحجز</p>
+            <div>
+              <label style={{ display: 'block', color: '#9ca3af', fontSize: 12, marginBottom: 6 }}>تاريخ الاستلام *</label>
+              <input type="date" value={form.pickup} min={today} required onChange={set('pickup')} />
+            </div>
+            <div>
+              <label style={{ display: 'block', color: '#9ca3af', fontSize: 12, marginBottom: 6 }}>تاريخ التسليم *</label>
+              <input type="date" value={form.dropoff} min={form.pickup || today} required onChange={set('dropoff')} />
+            </div>
+            {form.dropoff && (
+              <div style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.2)', borderRadius: 12, padding: 16 }}>
+                {[['سعر اليوم', `${car.price} ر.س`], ['عدد الأيام', `${days} يوم`], ['التأمين الشامل', '✓ مشمول']].map(([l, v]) => (
+                  <div key={l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ color: '#9ca3af', fontSize: 13 }}>{l}</span>
+                    <span style={{ color: l === 'التأمين الشامل' ? '#4ade80' : '#fff', fontSize: 13 }}>{v}</span>
+                  </div>
+                ))}
+                <div style={{ borderTop: '1px solid rgba(212,160,23,0.2)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#d4a017', fontWeight: 700 }}>الإجمالي</span>
+                  <span style={{ color: '#d4a017', fontWeight: 900, fontSize: 24 }}>{total} <span style={{ fontSize: 13 }}>ر.س</span></span>
                 </div>
-              ))}
-              <button type="button" className="gold-btn" style={{ padding: '13px', borderRadius: 10, fontSize: 15, marginTop: 8 }}
-                onClick={() => { if (form.name && form.phone && form.idNumber && form.licenseNumber) setStep(2) }}>
-                التالي: تفاصيل الحجز ←
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button type="button" onClick={() => setStep(1)} style={{ flex: 1, padding: '12px', borderRadius: 10, fontSize: 13, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af', cursor: 'pointer' }}>
+                → رجوع
+              </button>
+              <button type="button" className="gold-btn"
+                style={{ flex: 2, padding: '13px', borderRadius: 10, fontSize: 15 }}
+                disabled={!form.dropoff}
+                onClick={() => form.dropoff && setStep(3)}>
+                التالي: الدفع ←
               </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {step === 2 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <p style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, margin: 0 }}>2️⃣ تفاصيل الحجز</p>
-              <div>
-                <label style={{ display: 'block', color: '#9ca3af', fontSize: 12, marginBottom: 6 }}>تاريخ الاستلام *</label>
-                <input type="date" value={form.pickup} min={today} required onChange={set('pickup')} />
-              </div>
-              <div>
-                <label style={{ display: 'block', color: '#9ca3af', fontSize: 12, marginBottom: 6 }}>تاريخ التسليم *</label>
-                <input type="date" value={form.dropoff} min={form.pickup || today} required onChange={set('dropoff')} />
-              </div>
-
-              {form.dropoff && (
-                <div style={{ background: 'rgba(212,160,23,0.06)', border: '1px solid rgba(212,160,23,0.2)', borderRadius: 12, padding: 18 }}>
-                  {[['سعر اليوم', `${car.price} ر.س`], ['عدد الأيام', `${days} يوم`], ['التأمين الشامل', '✓ مشمول']].map(([l, v]) => (
-                    <div key={l} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                      <span style={{ color: '#9ca3af', fontSize: 13 }}>{l}</span>
-                      <span style={{ color: l === 'التأمين الشامل' ? '#4ade80' : '#fff', fontSize: 13 }}>{v}</span>
-                    </div>
-                  ))}
-                  <div style={{ borderTop: '1px solid rgba(212,160,23,0.2)', paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#d4a017', fontWeight: 700 }}>الإجمالي</span>
-                    <span style={{ color: '#d4a017', fontWeight: 900, fontSize: 26 }}>{total} <span style={{ fontSize: 13 }}>ر.س</span></span>
-                  </div>
-                </div>
-              )}
-
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setStep(1)} style={{ flex: 1, padding: '12px', borderRadius: 10, fontSize: 13, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#9ca3af', cursor: 'pointer' }}>
-                  → رجوع
-                </button>
-                <button type="submit" className="gold-btn" style={{ flex: 2, padding: '13px', borderRadius: 10, fontSize: 15, opacity: submitting ? 0.7 : 1 }} disabled={submitting}>
-                  {submitting ? '⏳ جاري الحفظ...' : '✅ تأكيد الحجز'}
-                </button>
-              </div>
-            </div>
-          )}
-        </form>
+        {/* Step 3: Payment */}
+        {step === 3 && (
+          <PaymentStep
+            total={total}
+            carName={car.name}
+            onConfirm={handlePaymentConfirm}
+            onBack={() => setStep(2)}
+            submitting={submitting}
+          />
+        )}
       </div>
     </div>
   )
@@ -989,19 +1137,22 @@ export default function App() {
   const handleBookCar = useCallback((car) => setBookingCar(car), [])
 
   const handleConfirmBooking = useCallback(async (data) => {
+    let saved
     if (isConfigured) {
-      const saved = await createBooking(data)
+      saved = await createBooking(data)
       setBookings(prev => [saved, ...prev])
+      // Send WhatsApp notification (non-blocking)
+      notifyWhatsApp(saved)
     } else {
-      const demo = {
+      saved = {
         id: `BK${Date.now()}`, car_name: data.carName,
         customer_name: data.name, customer_phone: data.phone,
         days: data.days, total: data.total, status: 'pending',
         created_at: new Date().toISOString(),
       }
-      setBookings(prev => [demo, ...prev])
+      setBookings(prev => [saved, ...prev])
     }
-    showToast('تم تسجيل حجزك بنجاح! سنتصل بك قريباً.')
+    showToast('✅ تم الحجز! سيصلك تأكيد على واتساب.')
   }, [showToast])
 
   const handleSignOut = useCallback(async () => {
