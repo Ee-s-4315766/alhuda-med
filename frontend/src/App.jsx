@@ -977,11 +977,12 @@ function ContactPage() {
         <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '16px 0 16px', color: '#fff' }}>نحن هنا لمساعدتك</h2>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 36 }}>
-        {[['📞', 'الهاتف', '—'], ['💬', 'واتساب', '—'], ['📍', 'الموقع', '—']].map(([icon, l, v]) => (
-          <div key={l} className="glass-card" style={{ borderRadius: 14, padding: 20, textAlign: 'center' }}>
+        {[['📞', 'الهاتف', '—', null], ['💬', 'واتساب', '—', null], ['📍', 'الموقع', 'اضغط للخريطة', 'https://maps.app.goo.gl/ed6H9AzUU1kzJ6eP7']].map(([icon, l, v, href]) => (
+          <div key={l} className="glass-card" style={{ borderRadius: 14, padding: 20, textAlign: 'center', cursor: href ? 'pointer' : 'default' }}
+            onClick={() => href && window.open(href, '_blank')}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
             <div style={{ color: '#f0b429', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{l}</div>
-            <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{v}</div>
+            <div style={{ color: href ? '#f0b429' : '#fff', fontSize: 13, fontWeight: 600, textDecoration: href ? 'underline' : 'none' }}>{v}</div>
           </div>
         ))}
       </div>
@@ -1047,7 +1048,7 @@ function Footer({ setCurrentPage }) {
             <div style={{ color: '#9ca3af', fontSize: 13, lineHeight: 2.2 }}>
               <div>📞 —</div>
               <div>💬 واتساب: —</div>
-              <div>📍 —</div>
+              <div style={{ cursor: 'pointer' }} onClick={() => window.open('https://maps.app.goo.gl/ed6H9AzUU1kzJ6eP7', '_blank')}>📍 موقعنا على الخريطة</div>
               <div>🕐 8 ص – 10 م</div>
             </div>
           </div>
