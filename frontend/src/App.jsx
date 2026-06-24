@@ -318,17 +318,8 @@ function Navbar({ currentPage, setCurrentPage, pendingCount, session }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
           onClick={() => setCurrentPage('home')}>
-          <div style={{
-            width: 40, height: 40,
-            background: 'linear-gradient(135deg, #d4a017, #f0c040)',
-            borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <CarIcon size={20} color="#060d1f" />
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 17, color: '#fff' }}>موكار</div>
-            <div style={{ fontSize: 10, color: '#d4a017', letterSpacing: 1 }}>لتأجير السيارات</div>
-          </div>
+          <img src="/logo.jpg" alt="MOCAR Rental"
+            style={{ height: 48, width: 'auto', borderRadius: 8, objectFit: 'contain' }} />
         </div>
 
         <div style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
