@@ -414,14 +414,6 @@ function HeroSection({ onSearch, setCurrentPage }) {
           </div>
         </form>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, maxWidth: 600, margin: '48px auto 0' }}>
-          {[['15+', 'سيارة متاحة'], ['500+', 'عميل راضٍ'], ['8+', 'سنوات خبرة']].map(([v, l], i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, color: '#f0b429' }}>{v}</div>
-              <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>{l}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   )
