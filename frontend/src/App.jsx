@@ -168,7 +168,7 @@ function PaymentStep({ total, carName, onConfirm, onBack, submitting }) {
       element: containerRef.current,
       amount: total * 100,
       currency: 'SAR',
-      description: `حجز ${carName} — مكتب الهدى`,
+      description: `حجز ${carName} — مكتب موكار`,
       publishable_api_key: moyasarKey,
       callback_url: window.location.href,
       methods: ['creditcard', 'applepay', 'stcpay'],
@@ -326,7 +326,7 @@ function Navbar({ currentPage, setCurrentPage, pendingCount, session }) {
             <CarIcon size={20} color="#060d1f" />
           </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: 17, color: '#fff' }}>الهدى</div>
+            <div style={{ fontWeight: 800, fontSize: 17, color: '#fff' }}>موكار</div>
             <div style={{ fontSize: 10, color: '#d4a017', letterSpacing: 1 }}>لتأجير السيارات</div>
           </div>
         </div>
@@ -373,7 +373,7 @@ function HeroSection({ onSearch, setCurrentPage }) {
       <div style={{ maxWidth: 1100, margin: '0 auto', width: '100%', position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
           <span style={{ background: 'rgba(212,160,23,0.1)', border: '1px solid rgba(212,160,23,0.4)', color: '#d4a017', padding: '6px 20px', borderRadius: 20, fontSize: 13, fontWeight: 600, letterSpacing: 1 }}>
-            ✦ مكتب الهدى لتأجير السيارات ✦
+            ✦ مكتب موكار لتأجير السيارات ✦
           </span>
         </div>
         <h1 style={{ textAlign: 'center', fontSize: 'clamp(36px, 6vw, 70px)', fontWeight: 900, lineHeight: 1.15, margin: '0 0 16px', color: '#fff' }}>
@@ -758,7 +758,7 @@ function AdminLogin({ onLogin }) {
             <CarIcon size={26} color="#060d1f" />
           </div>
           <h2 style={{ color: '#fff', fontWeight: 800, fontSize: 22, margin: '0 0 6px' }}>دخول المكتب</h2>
-          <p style={{ color: '#6b7280', fontSize: 13 }}>لوحة تحكم مكتب الهدى · مشغّلة بـ Supabase Auth</p>
+          <p style={{ color: '#6b7280', fontSize: 13 }}>لوحة تحكم مكتب موكار · مشغّلة بـ Supabase Auth</p>
         </div>
 
         {!isConfigured && (
@@ -964,7 +964,7 @@ function AboutPage() {
   return (
     <section style={{ padding: '80px 24px', maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
       <span style={{ color: '#d4a017', fontSize: 13, fontWeight: 600, letterSpacing: 2 }}>من نحن</span>
-      <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '16px 0 20px', color: '#fff' }}>مكتب الهدى لتأجير السيارات</h2>
+      <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 900, margin: '16px 0 20px', color: '#fff' }}>مكتب موكار لتأجير السيارات</h2>
       <p style={{ color: '#9ca3af', fontSize: 16, lineHeight: 1.8, marginBottom: 48 }}>
         نخدم عملاءنا منذ أكثر من 8 سنوات بأعلى معايير الجودة. أسطولنا يضم أحدث الموديلات مع تأمين شامل وخدمة على مدار الساعة.
       </p>
@@ -1047,7 +1047,7 @@ function Footer({ setCurrentPage }) {
               <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #d4a017, #f0c040)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <CarIcon size={17} color="#060d1f" />
               </div>
-              <span style={{ fontWeight: 800, color: '#fff', fontSize: 15 }}>مكتب الهدى</span>
+              <span style={{ fontWeight: 800, color: '#fff', fontSize: 15 }}>مكتب موكار</span>
             </div>
             <p style={{ color: '#6b7280', fontSize: 13, lineHeight: 1.7 }}>أفضل تجربة تأجير سيارات بأعلى معايير الجودة.</p>
           </div>
@@ -1070,7 +1070,7 @@ function Footer({ setCurrentPage }) {
           </div>
         </div>
         <div style={{ borderTop: '1px solid rgba(212,160,23,0.1)', paddingTop: 20, textAlign: 'center', color: '#4b5563', fontSize: 12 }}>
-          © 2026 مكتب الهدى لتأجير السيارات · مدعوم بـ{' '}
+          © 2026 مكتب موكار لتأجير السيارات · مدعوم بـ{' '}
           <span style={{ color: 'rgba(212,160,23,0.6)' }}>Supabase</span>
         </div>
       </div>
