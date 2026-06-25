@@ -19,6 +19,16 @@ export async function deleteCar(carId) {
   if (error) throw error
 }
 
+export async function addCar(fields) {
+  const { data, error } = await supabase
+    .from('cars')
+    .insert([fields])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function updateCar(carId, fields) {
   const { data, error } = await supabase
     .from('cars')

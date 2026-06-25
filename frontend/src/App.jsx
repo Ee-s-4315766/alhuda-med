@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, isConfigured } from './lib/supabase'
 import {
-  fetchCars, fetchBookings, createBooking, deleteCar, updateCar,
+  fetchCars, fetchBookings, createBooking, deleteCar, updateCar, addCar,
   subscribeToBookings, signIn, signOut, onAuthChange,
   notifyWhatsApp,
 } from './lib/db'
@@ -790,6 +790,104 @@ function AdminLogin({ onLogin }) {
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
+function AddCarModal({ onSave, onClose }) {
+  const [form, setForm] = useState({
+    name: '', price: '', type: 'sedan', type_label: 'سيدان',
+    seats: 5, year: new Date().getFullYear(), fuel: 'بنزين',
+    transmission: 'أوتوماتيك', color: '#1a3a6b', image_url: '', available: true,
+  })
+  const [saving, setSaving] = useState(false)
+  const set = (k) => (e) => setForm(prev => ({ ...prev, [k]: e.target.value }))
+
+  const typeOptions = [
+    { value: 'sedan',   label: 'سيدان' },
+    { value: 'suv',     label: 'SUV' },
+    { value: 'economy', label: 'اقتصادي' },
+    { value: 'luxury',  label: 'فاخرة' },
+  ]
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" style={{ maxWidth: 460 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#fff' }}>➕ إضافة سيارة جديدة</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: 20 }}>×</button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ display: 'block', color: '#f0b429', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>اسم السيارة *</label>
+            <input type="text" placeholder="مثال: هيونداي إيلانترا" value={form.name} onChange={set('name')} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', color: '#f0b429', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>السعر / يوم (ر.س) *</label>
+              <input type="number" placeholder="0" value={form.price} onChange={set('price')} />
+            </div>
+            <div>
+              <label style={{ display: 'block', color: '#f0b429', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>نوع السيارة</label>
+              <select value={form.type} onChange={(e) => {
+                const opt = typeOptions.find(o => o.value === e.target.value)
+                setForm(prev => ({ ...prev, type: e.target.value, type_label: opt?.label || e.target.value }))
+              }}>
+                {typeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', color: '#f0b429', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>عدد المقاعد</label>
+              <input type="number" value={form.seats} onChange={set('seats')} />
+            </div>
+            <div>
+              <label style={{ display: 'block', color: '#f0b429', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>سنة الصنع</label>
+              <input type="number" value={form.year} onChange={set('year')} />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', color: '#f0b429', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>نوع الوقود</label>
+              <select value={form.fuel} onChange={set('fuel')}>
+                <option>بنزين</option><option>ديزل</option><option>هجين</option><option>كهربائي</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', color: '#f0b429', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>ناقل الحركة</label>
+              <select value={form.transmission} onChange={set('transmission')}>
+                <option>أوتوماتيك</option><option>يدوي</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label style={{ display: 'block', color: '#f0b429', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>رابط صورة السيارة</label>
+            <input type="text" placeholder="https://..." value={form.image_url} onChange={set('image_url')} />
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+          <button className="gold-btn" style={{ flex: 1, padding: '12px', borderRadius: 10, fontSize: 14 }}
+            disabled={saving || !form.name || !form.price}
+            onClick={async () => {
+              setSaving(true)
+              await onSave({
+                ...form,
+                price: Number(form.price),
+                seats: Number(form.seats),
+                year:  Number(form.year),
+                features: [],
+              })
+              onClose()
+            }}>
+            {saving ? 'جاري الإضافة...' : '✅ إضافة السيارة'}
+          </button>
+          <button onClick={onClose} style={{
+            padding: '12px 20px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
+            background: 'transparent', color: '#9ca3af', cursor: 'pointer', fontSize: 14,
+          }}>إلغاء</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function EditCarModal({ car, onSave, onClose }) {
   const [form, setForm] = useState({
     name: car.name, price: car.price, type_label: car.type_label,
@@ -829,9 +927,10 @@ function EditCarModal({ car, onSave, onClose }) {
   )
 }
 
-function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar, onEditCar, loading }) {
+function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar, onEditCar, onAddCar, loading }) {
   const [activeTab, setActiveTab] = useState('overview')
   const [editingCar, setEditingCar] = useState(null)
+  const [showAddCar, setShowAddCar] = useState(false)
 
   const stats = {
     totalCars:     cars.length,
@@ -929,6 +1028,13 @@ function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar,
       )}
 
       {activeTab === 'fleet' && (
+        <>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <button className="gold-btn" onClick={() => setShowAddCar(true)}
+            style={{ padding: '10px 20px', borderRadius: 10, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            ➕ إضافة سيارة جديدة
+          </button>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 18 }}>
           {cars.map((car) => (
             <div key={car.id} style={{
@@ -980,6 +1086,13 @@ function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar,
             </div>
           ))}
         </div>
+        </>
+      )}
+      {showAddCar && (
+        <AddCarModal
+          onSave={async (fields) => { await onAddCar(fields); setShowAddCar(false) }}
+          onClose={() => setShowAddCar(false)}
+        />
       )}
       {editingCar && (
         <EditCarModal
@@ -1251,6 +1364,16 @@ export default function App() {
     }
   }, [showToast])
 
+  const handleAddCar = useCallback(async (fields) => {
+    try {
+      const newCar = await addCar(fields)
+      setCars(prev => [...prev, newCar])
+      showToast('✅ تمت إضافة السيارة')
+    } catch {
+      showToast('❌ فشلت الإضافة', 'error')
+    }
+  }, [showToast])
+
   const pendingCount = bookings.filter(b => b.status === 'pending').length
 
   return (
@@ -1281,6 +1404,7 @@ export default function App() {
             onRefresh={loadData}
             onDeleteCar={handleDeleteCar}
             onEditCar={handleEditCar}
+            onAddCar={handleAddCar}
             loading={loadingCars}
           />
         ) : (
