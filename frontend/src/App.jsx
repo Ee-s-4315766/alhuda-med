@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, isConfigured } from './lib/supabase'
 import {
-  fetchCars, fetchBookings, createBooking,
+  fetchCars, fetchBookings, createBooking, deleteCar,
   subscribeToBookings, signIn, signOut, onAuthChange,
   notifyWhatsApp,
 } from './lib/db'
@@ -67,6 +67,12 @@ const BellIcon = () => (
 const LogOutIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+)
+
+const TrashIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
   </svg>
 )
 
@@ -778,7 +784,7 @@ function AdminLogin({ onLogin }) {
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function Dashboard({ session, bookings, cars, onSignOut, onRefresh, loading }) {
+function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar, loading }) {
   const [activeTab, setActiveTab] = useState('overview')
 
   const stats = {
@@ -897,6 +903,19 @@ function Dashboard({ session, bookings, cars, onSignOut, onRefresh, loading }) {
                   </span>
                 </div>
               </div>
+              {onDeleteCar && (
+                <button
+                  onClick={() => { if (window.confirm(`حذف "${car.name}"؟`)) onDeleteCar(car.id) }}
+                  style={{
+                    flexShrink: 0, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                    borderRadius: 8, color: '#f87171', cursor: 'pointer', padding: '6px 8px',
+                    display: 'flex', alignItems: 'center', transition: 'all 0.2s',
+                  }}
+                  title="حذف السيارة"
+                >
+                  <TrashIcon />
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -1144,6 +1163,16 @@ export default function App() {
     setCurrentPage('home')
   }, [])
 
+  const handleDeleteCar = useCallback(async (carId) => {
+    try {
+      await deleteCar(carId)
+      setCars(prev => prev.filter(c => c.id !== carId))
+      showToast('✅ تم حذف السيارة')
+    } catch {
+      showToast('❌ فشل الحذف', 'error')
+    }
+  }, [showToast])
+
   const pendingCount = bookings.filter(b => b.status === 'pending').length
 
   return (
@@ -1172,6 +1201,7 @@ export default function App() {
             cars={cars}
             onSignOut={handleSignOut}
             onRefresh={loadData}
+            onDeleteCar={handleDeleteCar}
             loading={loadingCars}
           />
         ) : (
