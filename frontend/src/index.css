@@ -7,8 +7,8 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background-color: #0b1d54;
-  color: #ffffff;
+  background-color: #f5f8ff;
+  color: #0b1d54;
   direction: rtl;
 }
 
@@ -32,10 +32,11 @@ body {
 }
 
 .glass-card {
-  background: rgba(13, 31, 92, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(240, 180, 41, 0.2);
+  background: #ffffff;
+  backdrop-filter: none;
+  border: 1px solid rgba(11, 29, 84, 0.1);
   transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(11, 29, 84, 0.06);
 }
 
 .glass-card:hover {
@@ -74,7 +75,7 @@ body {
 
 .nav-link {
   position: relative;
-  color: #c0c0c0;
+  color: #4b5563;
   transition: color 0.3s;
   text-decoration: none;
   cursor: pointer;
@@ -100,9 +101,9 @@ body {
 }
 
 input, select {
-  background: rgba(11, 29, 84, 0.8) !important;
-  border: 1px solid rgba(240, 180, 41, 0.3) !important;
-  color: white !important;
+  background: #f5f8ff !important;
+  border: 1px solid rgba(11, 29, 84, 0.2) !important;
+  color: #0b1d54 !important;
   border-radius: 8px;
   padding: 10px 14px;
   transition: border-color 0.3s;
@@ -116,16 +117,16 @@ input:focus, select:focus {
 }
 
 input::placeholder {
-  color: #6b7280;
+  color: #9ca3af;
 }
 
 select option {
-  background: #0d2260;
-  color: white;
+  background: #ffffff;
+  color: #0b1d54;
 }
 
 .hero-bg {
-  background: linear-gradient(135deg, #0b1d54 0%, #091747 40%, #0d2260 100%);
+  background: linear-gradient(135deg, #eef2ff 0%, #f0f4ff 40%, #e8eeff 100%);
   position: relative;
   overflow: hidden;
 }
@@ -137,7 +138,7 @@ select option {
   right: -20%;
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(240, 180, 41, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(240, 180, 41, 0.1) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
@@ -149,17 +150,18 @@ select option {
   left: -10%;
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, rgba(240, 180, 41, 0.05) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(11, 29, 84, 0.05) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
 }
 
 .stat-card {
-  background: linear-gradient(135deg, rgba(13, 34, 96, 0.9) 0%, rgba(11, 29, 84, 0.95) 100%);
-  border: 1px solid rgba(240, 180, 41, 0.2);
+  background: #ffffff;
+  border: 1px solid rgba(11, 29, 84, 0.1);
   border-radius: 16px;
   padding: 24px;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(11, 29, 84, 0.06);
 }
 
 .stat-card:hover {
@@ -171,7 +173,7 @@ select option {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(11, 29, 84, 0.5);
   backdrop-filter: blur(4px);
   z-index: 1000;
   display: flex;
@@ -182,8 +184,8 @@ select option {
 }
 
 .modal-content {
-  background: linear-gradient(135deg, #0d2260 0%, #0b1d54 100%);
-  border: 1px solid rgba(240, 180, 41, 0.3);
+  background: #ffffff;
+  border: 1px solid rgba(11, 29, 84, 0.1);
   border-radius: 20px;
   padding: 32px;
   width: 100%;
@@ -191,17 +193,17 @@ select option {
   max-height: 90vh;
   overflow-y: auto;
   animation: fadeIn 0.3s ease-out;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(240, 180, 41, 0.1);
+  box-shadow: 0 24px 80px rgba(11, 29, 84, 0.2);
   scrollbar-width: thin;
-  scrollbar-color: #f0b429 #091747;
+  scrollbar-color: #f0b429 #f5f8ff;
 }
 
 .filter-btn {
   padding: 8px 20px;
   border-radius: 24px;
-  border: 1px solid rgba(240, 180, 41, 0.3);
-  background: transparent;
-  color: #c0c0c0;
+  border: 1px solid rgba(11, 29, 84, 0.2);
+  background: #ffffff;
+  color: #4b5563;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 14px;
@@ -215,11 +217,12 @@ select option {
 }
 
 .car-card {
-  background: linear-gradient(145deg, #0d2260 0%, #0b1d54 100%);
-  border: 1px solid rgba(240, 180, 41, 0.15);
+  background: #ffffff;
+  border: 1px solid rgba(11, 29, 84, 0.1);
   border-radius: 20px;
   overflow: hidden;
   transition: all 0.4s ease;
+  box-shadow: 0 2px 16px rgba(11, 29, 84, 0.07);
 }
 
 .car-card:hover {
@@ -236,7 +239,7 @@ select option {
   font-size: 12px;
   font-weight: 600;
   background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
+  color: #16a34a;
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
@@ -247,8 +250,8 @@ select option {
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  background: rgba(239, 68, 68, 0.15);
-  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
@@ -260,7 +263,7 @@ select option {
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s;
-  color: #9ca3af;
+  color: #4b5563;
   font-size: 14px;
 }
 
@@ -274,5 +277,5 @@ select option {
 }
 
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: #0b1d54; }
+::-webkit-scrollbar-track { background: #f5f8ff; }
 ::-webkit-scrollbar-thumb { background: rgba(240, 180, 41, 0.4); border-radius: 3px; }
