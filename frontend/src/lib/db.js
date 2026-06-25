@@ -11,6 +11,14 @@ export async function fetchCars() {
   return data
 }
 
+export async function deleteCar(carId) {
+  const { error } = await supabase
+    .from('cars')
+    .delete()
+    .eq('id', carId)
+  if (error) throw error
+}
+
 export async function updateCarAvailability(carId, available) {
   const { error } = await supabase
     .from('cars')
