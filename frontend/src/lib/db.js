@@ -19,6 +19,17 @@ export async function deleteCar(carId) {
   if (error) throw error
 }
 
+export async function updateCar(carId, fields) {
+  const { data, error } = await supabase
+    .from('cars')
+    .update(fields)
+    .eq('id', carId)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
 export async function updateCarAvailability(carId, available) {
   const { error } = await supabase
     .from('cars')
