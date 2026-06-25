@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, isConfigured } from './lib/supabase'
 import {
-  fetchCars, fetchBookings, createBooking, deleteCar,
+  fetchCars, fetchBookings, createBooking, deleteCar, updateCar,
   subscribeToBookings, signIn, signOut, onAuthChange,
   notifyWhatsApp,
 } from './lib/db'
@@ -73,6 +73,12 @@ const LogOutIcon = () => (
 const TrashIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+  </svg>
+)
+
+const EditIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
   </svg>
 )
 
@@ -784,8 +790,48 @@ function AdminLogin({ onLogin }) {
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar, loading }) {
+function EditCarModal({ car, onSave, onClose }) {
+  const [form, setForm] = useState({
+    name: car.name, price: car.price, type_label: car.type_label,
+    seats: car.seats, year: car.year, fuel: car.fuel,
+  })
+  const [saving, setSaving] = useState(false)
+  const set = (k) => (e) => setForm(prev => ({ ...prev, [k]: e.target.value }))
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#fff' }}>تعديل السيارة</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: 20 }}>×</button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {[['name','اسم السيارة','text'],['price','السعر باليوم (ر.س)','number'],['type_label','نوع السيارة','text'],['seats','عدد المقاعد','number'],['year','السنة','number'],['fuel','الوقود','text']].map(([key, label, type]) => (
+            <div key={key}>
+              <label style={{ display: 'block', color: '#f0b429', fontSize: 12, fontWeight: 600, marginBottom: 6 }}>{label}</label>
+              <input type={type} value={form[key]} onChange={set(key)} />
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+          <button className="gold-btn" style={{ flex: 1, padding: '12px', borderRadius: 10, fontSize: 14 }}
+            disabled={saving}
+            onClick={async () => { setSaving(true); await onSave(car.id, form); onClose() }}>
+            {saving ? 'جاري الحفظ...' : '💾 حفظ التعديلات'}
+          </button>
+          <button onClick={onClose} style={{
+            padding: '12px 20px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
+            background: 'transparent', color: '#9ca3af', cursor: 'pointer', fontSize: 14,
+          }}>إلغاء</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar, onEditCar, loading }) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [editingCar, setEditingCar] = useState(null)
 
   const stats = {
     totalCars:     cars.length,
@@ -903,22 +949,44 @@ function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar,
                   </span>
                 </div>
               </div>
-              {onDeleteCar && (
-                <button
-                  onClick={() => { if (window.confirm(`حذف "${car.name}"؟`)) onDeleteCar(car.id) }}
-                  style={{
-                    flexShrink: 0, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                    borderRadius: 8, color: '#f87171', cursor: 'pointer', padding: '6px 8px',
-                    display: 'flex', alignItems: 'center', transition: 'all 0.2s',
-                  }}
-                  title="حذف السيارة"
-                >
-                  <TrashIcon />
-                </button>
-              )}
+              <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {onEditCar && (
+                  <button
+                    onClick={() => setEditingCar(car)}
+                    style={{
+                      background: 'rgba(240,180,41,0.1)', border: '1px solid rgba(240,180,41,0.3)',
+                      borderRadius: 8, color: '#f0b429', cursor: 'pointer', padding: '6px 8px',
+                      display: 'flex', alignItems: 'center', transition: 'all 0.2s',
+                    }}
+                    title="تعديل السيارة"
+                  >
+                    <EditIcon />
+                  </button>
+                )}
+                {onDeleteCar && (
+                  <button
+                    onClick={() => { if (window.confirm(`حذف "${car.name}"؟`)) onDeleteCar(car.id) }}
+                    style={{
+                      background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
+                      borderRadius: 8, color: '#f87171', cursor: 'pointer', padding: '6px 8px',
+                      display: 'flex', alignItems: 'center', transition: 'all 0.2s',
+                    }}
+                    title="حذف السيارة"
+                  >
+                    <TrashIcon />
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
+      )}
+      {editingCar && (
+        <EditCarModal
+          car={editingCar}
+          onSave={async (id, fields) => { await onEditCar(id, fields); setEditingCar(null) }}
+          onClose={() => setEditingCar(null)}
+        />
       )}
     </section>
   )
@@ -1173,6 +1241,16 @@ export default function App() {
     }
   }, [showToast])
 
+  const handleEditCar = useCallback(async (carId, fields) => {
+    try {
+      const updated = await updateCar(carId, fields)
+      setCars(prev => prev.map(c => c.id === carId ? { ...c, ...updated } : c))
+      showToast('✅ تم حفظ التعديلات')
+    } catch {
+      showToast('❌ فشل الحفظ', 'error')
+    }
+  }, [showToast])
+
   const pendingCount = bookings.filter(b => b.status === 'pending').length
 
   return (
@@ -1202,6 +1280,7 @@ export default function App() {
             onSignOut={handleSignOut}
             onRefresh={loadData}
             onDeleteCar={handleDeleteCar}
+            onEditCar={handleEditCar}
             loading={loadingCars}
           />
         ) : (
