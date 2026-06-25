@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, isConfigured } from './lib/supabase'
 import {
-  fetchCars, fetchBookings, createBooking, deleteCar, updateCar, addCar,
+  fetchCars, fetchBookings, createBooking, deleteCar, updateCar, addCar, fetchSetting, saveSetting,
   subscribeToBookings, signIn, signOut, onAuthChange,
   notifyWhatsApp,
 } from './lib/db'
@@ -929,10 +929,12 @@ function EditCarModal({ car, onSave, onClose }) {
   )
 }
 
-function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar, onEditCar, onAddCar, loading }) {
+function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar, onEditCar, onAddCar, workingHours, onSaveWorkingHours, loading }) {
   const [activeTab, setActiveTab] = useState('overview')
   const [editingCar, setEditingCar] = useState(null)
   const [showAddCar, setShowAddCar] = useState(false)
+  const [hoursInput, setHoursInput] = useState(workingHours)
+  const [savingHours, setSavingHours] = useState(false)
 
   const stats = {
     totalCars:     cars.length,
@@ -1010,6 +1012,36 @@ function Dashboard({ session, bookings, cars, onSignOut, onRefresh, onDeleteCar,
                 <div style={{ fontSize: 12, color: '#6b7280' }}>{label}</div>
               </div>
             ))}
+          </div>
+
+          {/* Working hours editor */}
+          <div style={{ background: '#fff', border: '1px solid rgba(11,29,84,0.1)', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 2px 12px rgba(11,29,84,0.06)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <span style={{ fontSize: 22 }}>🕐</span>
+              <span style={{ fontWeight: 700, color: '#0b1d54', fontSize: 15 }}>أوقات العمل</span>
+            </div>
+            <textarea
+              value={hoursInput}
+              onChange={e => setHoursInput(e.target.value)}
+              rows={3}
+              placeholder="مثال: السبت - الخميس: 8 ص - 10 م&#10;الجمعة: 4 م - 10 م"
+              style={{
+                width: '100%', background: '#f5f8ff', border: '1px solid rgba(11,29,84,0.2)',
+                borderRadius: 8, padding: '10px 14px', color: '#0b1d54', fontSize: 14,
+                outline: 'none', resize: 'vertical', fontFamily: 'inherit', marginBottom: 12,
+              }}
+            />
+            <button
+              className="gold-btn"
+              style={{ padding: '10px 24px', borderRadius: 8, fontSize: 13 }}
+              disabled={savingHours}
+              onClick={async () => {
+                setSavingHours(true)
+                await onSaveWorkingHours(hoursInput)
+                setSavingHours(false)
+              }}>
+              {savingHours ? 'جاري الحفظ...' : '💾 حفظ أوقات العمل'}
+            </button>
           </div>
 
           {/* Realtime indicator */}
@@ -1177,7 +1209,7 @@ function AboutPage() {
 
 // ─── Contact ──────────────────────────────────────────────────────────────────
 
-function ContactPage() {
+function ContactPage({ workingHours = '—' }) {
   const [sent, setSent] = useState(false)
   const [form, setForm] = useState({ name: '', phone: '', message: '' })
 
@@ -1201,7 +1233,7 @@ function ContactPage() {
         <span style={{ fontSize: 28 }}>🕐</span>
         <div>
           <div style={{ color: '#f0b429', fontSize: 11, fontWeight: 600, marginBottom: 4 }}>أوقات العمل</div>
-          <div style={{ color: '#0b1d54', fontSize: 13, fontWeight: 600 }}>—</div>
+          <div style={{ color: '#0b1d54', fontSize: 13, fontWeight: 600, whiteSpace: 'pre-line' }}>{workingHours}</div>
         </div>
       </div>
       {sent ? (
@@ -1292,6 +1324,7 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false)
   const [toast, setToast] = useState(null)
   const [searchFilter, setSearchFilter] = useState(null)
+  const [workingHours, setWorkingHours] = useState('—')
   const unsubRef = useRef(null)
 
   const showToast = useCallback((message, type = 'success') => {
@@ -1302,9 +1335,10 @@ export default function App() {
     if (!isConfigured) return
     setLoadingCars(true)
     try {
-      const [carsData, bookingsData] = await Promise.all([fetchCars(), fetchBookings()])
+      const [carsData, bookingsData, hours] = await Promise.all([fetchCars(), fetchBookings(), fetchSetting('working_hours')])
       setCars(carsData)
       setBookings(bookingsData)
+      if (hours) setWorkingHours(hours)
     } catch (err) {
       console.error('Failed to load data:', err)
       showToast('تعذّر تحميل البيانات من Supabase', 'error')
@@ -1382,6 +1416,16 @@ export default function App() {
     }
   }, [showToast])
 
+  const handleSaveWorkingHours = useCallback(async (val) => {
+    try {
+      await saveSetting('working_hours', val)
+      setWorkingHours(val)
+      showToast('✅ تم حفظ أوقات العمل')
+    } catch {
+      showToast('❌ فشل الحفظ', 'error')
+    }
+  }, [showToast])
+
   const handleAddCar = useCallback(async (fields) => {
     try {
       const newCar = await addCar(fields)
@@ -1409,7 +1453,7 @@ export default function App() {
         <CarGallery searchFilter={searchFilter} onBookCar={handleBookCar} cars={cars} loading={loadingCars} />
       )}
       {currentPage === 'about'   && <AboutPage />}
-      {currentPage === 'contact' && <ContactPage />}
+      {currentPage === 'contact' && <ContactPage workingHours={workingHours} />}
       {currentPage === 'dashboard' && (
         !authChecked ? (
           <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f0b429' }}>جاري التحقق...</div>
@@ -1423,6 +1467,8 @@ export default function App() {
             onDeleteCar={handleDeleteCar}
             onEditCar={handleEditCar}
             onAddCar={handleAddCar}
+            workingHours={workingHours}
+            onSaveWorkingHours={handleSaveWorkingHours}
             loading={loadingCars}
           />
         ) : (

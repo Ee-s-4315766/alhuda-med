@@ -19,6 +19,23 @@ export async function deleteCar(carId) {
   if (error) throw error
 }
 
+export async function fetchSetting(key) {
+  const { data, error } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('key', key)
+    .single()
+  if (error) return null
+  return data?.value ?? null
+}
+
+export async function saveSetting(key, value) {
+  const { error } = await supabase
+    .from('settings')
+    .upsert({ key, value })
+  if (error) throw error
+}
+
 export async function addCar(fields) {
   const { data, error } = await supabase
     .from('cars')
